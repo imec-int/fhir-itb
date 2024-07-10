@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scriptlet id="createAllergy" xmlns="http://www.gitb.com/tdl/v1/">
+    <!--
+        Scriptlet used to create an allergy intolerance (without submitting it).
+    -->
+    <imports>
+        <!--
+            The "import" element can be used to refer to an arbitrary resource within the test suite (in this case
+            a template to be used for the generation of the intolerance). Note that whenever you see a path reference
+            this is provided as relative with respect to the root folder of the test suite (not the current file).
+        -->
+        <artifact type="binary" encoding="UTF-8" name="template">resources/templates/allergyIntolerance.json</artifact>
+    </imports>
+    <params>
+        <!--
+            Notice here how certain input parameters are set with default values. These can be overriden by inputs but don't have to be provided.
+        -->
+        <var name="resourceType" type="string"><value>AllergyIntolerance</value></var>
+        <var name="patient" type="string"><value>Patient/example</value></var>
+        <var name="asserter" type="string"><value>Patient/example</value></var>
+        <var name="recorder" type="string"><value>Practitioner/practitioner</value></var>
+        <var name="codeCode" type="string"/>
+        <var name="codeText" type="string"/>
+        <var name="codeDisplay" type="string"/>
+        <var name="reactionCode" type="string"/>
+        <var name="reactionDisplay" type="string"/>
+    </params>       
+    <steps>
+        <!--
+            The "TokenGenerator" is used to create UUIDs, timestamps or any form of randomized tokens.
+        -->
+        <process handler="TokenGenerator" output="intoleranceId" operation="uuid"/>
+        <assign to="parameters{resourceType}">$resourceType</assign>
+        <assign to="parameters{intoleranceId}">$intoleranceId</assign>
+        <assign to="parameters{patient}">$patient</assign>
+        <assign to="parameters{asserter}">$asserter</assign>
+        <assign to="parameters{recorder}">$recorder</assign>
+        <assign to="parameters{codeCode}">$codeCode</assign>
+        <assign to="parameters{codeDisplay}">$codeDisplay</assign>
+        <assign to="parameters{codeText}">$codeText</assign>
+        <assign to="parameters{reactionCode}">$reactionCode</assign>
+        <assign to="parameters{reactionDisplay}">$reactionDisplay</assign>
+        <!--
+            The "TemplateProcessor" is used to take inputs (in the form of a map - see above) and a template
+            (provided via an "import" here) to create test content. It supports freemarker templates so you can
+            have also complex templates with e.g. conditionals and iterations as well.
+        -->
+        <process handler="TemplateProcessor" output="content">
+            <input name="parameters">$parameters</input>
+            <input name="template">$template</input>
+            <input name="syntax">'freemarker'</input>
+        </process>
+    </steps>
+    <!--
+        Here we return two outputs: the generated identifier and the complete generated content.
+    -->
+    <output name="identifier">$intoleranceId</output>
+    <output name="content">$content</output>
+</scriptlet>

@@ -1,0 +1,146 @@
+@startuml
+'skinparam linetype ortho
+skinparam linetype polyline
+hide circle
+hide stereotype
+
+'!pragma layout smetana
+
+skinparam class<<MD>> {
+ BorderColor DarkSlateGray
+ BackgroundColor WhiteSmoke
+ HeaderBackgroundColor #909090
+}
+
+skinparam class<<TM>> {
+ BorderColor #505090
+ BackgroundColor APPLICATION
+ HeaderBackgroundColor SkyBlue
+}
+
+    class "**TestSuite**" as TS<<TM>> {
+        |_ @<i>id 1..*
+        |_ metadata 1..1
+          |_ name 1..1
+          |_ type 0..1
+          |_ version 1..1
+          |_ authors 0..1
+          |_ description 0..1
+          |_ published 0..1
+          |_ lastModified 0..1
+          |_ documentation 0..1
+            |_ import 0..1
+            |_ from 0..1
+            |_ encoding 0..1
+          |_ update 0..1
+            |_ @<i>updateMetadata 0..1
+            |_ @<i>updateSpecification 0..1
+        |_ actors 0..1  
+          |_ actor 1..* 
+            |_ @<i>id 1..1
+            |_ @<i>default 0..1
+            |_ @<i>hidden 0..1
+            |_ @<i>displayOrder 0..1
+            |_ name 1..1
+            |_ desc 0..1
+            |_ endpoint 0..1
+              |_ @<i>name 1..1
+              |_ @<i>desc 0..1
+              |_ config 1..1
+                |_ @<i>name 1..1 
+                |_ @<i>label 0..1
+                |_ @<i>desc 0..1
+                |_ @<i>use 0..1
+                |_ @<i>kind 0..1
+                |_ @<i>adminOnly 0..1
+                |_ @<i>notForTests 0..1
+                |_ @<i>hidden 0..1
+                |_ @<i>dependsOn 0..1
+                |_ @<i>dependsOnValue 0..1
+                |_ @<i>allowedValues 0..1
+                |_ @<i>allowedValueLabels
+                |_ @<i>defaultValue 0..1
+        |_ testcase 0..*  
+          |_ @<i>id 1..1 
+          |_ prequisite 1..1
+          |_ option 0..*
+        --
+    }
+
+    class "**Test Case**" as LR<<TM>> {
+        |_ @<i>id 1..1
+        |_ @<i>supportsParallelExecution 0..1   
+        |_ @<i>optional 0..1
+        |_ @<i>disabled 0..1
+        |_ metadata 1..1
+          |_ name 1..1
+          |_ type 0..1
+          |_ version 1..1
+          |_ authors 0..1
+          |_ description 0..1
+          |_ published 0..1
+          |_ lastModified 0..1
+          |_ documentation 0..1
+            |_ import 0..1
+            |_ from 0..1
+            |_ encoding 0..1
+          |_  update 0..1
+            |_ @<i>updateMetadata 0..1
+            |_ @<i>resetTestHistory 0..1
+          |_  tags 0..1
+            |_ tag 0..*
+              |_  @<i>name 1..1
+              |_  @<i>foreground 0..1
+              |_  @<i>background 0..1            
+        |_  namespaces 0..1
+          |_ ns 0..*
+            |_ @<i>prefix 1..1
+        |_  imports 0..1
+          |_  @<i>name 1..1
+          |_  @<i>type 1..1
+          |_  @<i>encoding 0..1
+          |_  @<i>from 0..1        
+        |_  preliminary 0..1
+          |_  @<i>id 0..1
+          |_  @<i>title 0..1
+          |_  @<i>desc 0..1
+          |_  @<i>with 0..1
+          |_  @<i>inputTitle 0..1
+          |_  @<i>stopOnError 0..1
+          |_  @<i>hidden 0..1
+          |_  @<i>collapsed 0..1
+          |_  documentation 0..1
+          |_  instruct 0..1
+          |_  request 0..1
+        |_  variables 0..1
+          |_  @<i>name 1..1
+          |_  @<i>type 1..1
+          |_  value 0..1
+        |_  actors 1..1
+          |_  @<i>id 1..1
+          |_  @<i>name 0..1
+          |_  @<i>role 0..1
+          |_  @<i>displayOrder 0..1
+          |_  endpoint 0..1
+        |_  steps 1..1
+          |_  @<i>stopOnError 0..1
+          |_  @<i>logLevel 0..1
+        |_  output 0..1
+          |_ success 0..1
+            |_ case 0..1
+              |_ cond 1..1
+              |_ message 1..1
+            |_ default 0..1
+          |_ failure 0..1
+            |_ case 0..1
+              |_ cond 1..1
+              |_ message 1..1
+            |_ default 0..1
+        |_  scriptlets 0..1
+    }
+
+
+    class "**Scriptlets**" as LRL<<TM>> {
+    }
+
+@enduml

@@ -1,0 +1,156 @@
+<testcase id="tc-client-001" xmlns="http://www.gitb.com/tdl/v1/" xmlns:gitb="http://www.gitb.com/core/v1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <metadata>
+        <gitb:name>Test case 1: Submit allergy intolerances</gitb:name>
+        <gitb:version>1.0</gitb:version>
+        <gitb:description>The FHIR client submits a specific allergy intollerance to a FHIR server with evidence of its correct processing.</gitb:description>
+        <!-- See here how we refer to a HTML block that will be added as documentation for the test case. -->
+        <gitb:documentation import="docs/client/test-case-1.html"/>
+    </metadata>
+    <actors>
+        <!--
+            The Actor IDs need to match those in the test suite and in the test engine. One of these needs to always be the SUT (System Under Test).
+        -->
+        <gitb:actor id="client" role="SUT"/>
+        <gitb:actor id="server"/>
+    </actors>
+    <!-- 
+        Setting "stopOnError" to true will stop the test session as soon as an error is encountered. By default test sessions will continue regardless of errors.
+    -->    
+    <steps stopOnError="true">
+        <!--
+            The "call" step is like a function call for a scriptlet. In this case we include this call in each test case to do any setup needed before each test case.
+        -->
+        <group title="Setup" desc="Test session setup" collapsed="true">
+            <call path="scriptlets/setupData.xml">
+                <!-- 
+                    See here how we refer to DOMAIN-level configuration parameters.
+                -->
+                <input name="ingestData">$DOMAIN{ingestDataPerTestSession}</input>
+                <input name="serverApiRoot">$DOMAIN{embeddedFhirServerEndpoint}</input>
+                <!--
+                    We override the default step descriptions to better reflect that the setup refers to the internal
+                    FHIR server, not a FHIR server controlled by the tester.
+                -->
+                <input name="setupMessage">"Set up test dataset"</input>
+                <input name="deleteMessage">"Delete registered allergies"</input>
+            </call>
+        </group>
+        <!-- 
+            Groups add a nice visual separation in test cases but don't affect execution in any way. It can be interesting however to use a group in case you want to
+            check for any failures within the group's contained steps (e.g. in the "output" section later on).
+        -->
+        <group title="Step1" desc="Submit expected allergy">
+            <assign to="expectedCode">"762952008"</assign>
+            <!--
+                We could have just used an "interact" step directly here but its a nice practice to wrap this in a scriptlet as it allows us to manage all such
+                notifications in a common way (for example adding logging, checking configuration etc.).
+            -->
+            <call path="scriptlets/instructUser.xml">
+                <!-- 
+                    All expressions provided as element contents are XPath 3 expressions. Here we concatenate texts with a referenced variable to produce the 
+                    final message.
+                -->
+                <input name="message">"Please submit an allergy for code " || $expectedCode || " (peanut)."</input>
+            </call>
+            <!-- 
+                The "receive" step is one of the major messaging steps supported in the GITB TDL. It is used whenever the Test Bed needs to receive some
+                communication (or even action) asynchronously.
+
+                See also here how we refer to a domain configuration parameter to retrieve the value of the "handler" attribute (the WSDL address of the
+                service to handle the step).
+            -->
+
+            <process desc="pseudonymisation process for patient" output="patient" handler="$DOMAIN{processingServiceAddress}" operation="pseudonymisation">
+                <input name="configFilePath">"resources/config.properties"</input>
+                <input name="SSIN">""</input>
+            </process>
+
+            <receive id="receiveAllergy" desc="Submit allergy" from="client" to="server" handler="$DOMAIN{messagingServiceAddress}">
+                <input name="type">"postToValidate"</input>
+                <input name="patient">$patient</input>
+            </receive>
+            <!-- 
+                This is a nice example of requesting inputs from the user during the test (a screenshot in this case).
+            -->
+            <interact id="userData" inputTitle="Provide processing proof" desc="Provide processing proof">
+                <request desc="Allergy screenshot" inputType="UPLOAD" name="screenshot"/>
+            </interact>
+            <!-- 
+                The verify step is used to make simple (or complex) assertions on the exchanged data up to now. In this specific case, 
+                the check is a "complex" one as it delegates to a remote service that will return a full validation report.
+            -->
+            <verify id="validateAllergy" desc="Validate allergy" handler="$DOMAIN{validationServiceAddress}" level="$DOMAIN{validatorFailureSeverity}">
+                <input name="endpoint">$DOMAIN{embeddedFhirServerEndpoint} || "/AllergyIntolerance/$validate"</input>
+                <input name="payload">$receiveAllergy{response}{payload}</input>
+            </verify>
+            <!--
+                Using the "JSONPointerProcessor" we can extract data from JSON content. You could also do something similar with regular expressions but
+                it would be more cumbersome and less intuitive. Note that "process" steps are by default hidden.
+            -->
+            <process handler="JSONPointerProcessor" operation="process" output="submittedCode">
+                <input name="content">$receiveAllergy{response}{payload}</input>
+                <input name="pointer">"/code/coding/0/code"</input>
+            </process>
+            <verify id="verifyAllergyHasExpectedCode" desc="Verify that the expected allergy was submitted" handler="StringValidator">
+                <input name="actualstring">$submittedCode</input>
+                <input name="expectedstring">$expectedCode</input>
+            </verify>
+            <!--
+                In this step we want to pause and wait for an administrator's approval of the screenshot. To do this we use an "interact" step set with "admin" as true.
+            -->
+            <interact id="receiveApproval" desc="Request administrator approval" admin="true">
+                <instruct desc="Provided processing proof">$userData{screenshot}</instruct>
+                <request desc="Test result" options="Approved, Rejected" name="result"/>
+                <request desc="Comments" inputType="MULTILINE_TEXT" name="comments"/>            
+            </interact>
+            <!-- 
+                This is a nice example of doing simple conditional logic using XPath 3. In this case depending on whether the administrator approved we adapt
+                the outcome of the next reporting step accordingly (stored in a variable to be referenced later).
+            -->
+            <assign to="approvalResult">if ($receiveApproval{result} = "Approved") then "SUCCESS" else "FAILURE"</assign>
+            <!--
+                When you call the "assign" step like this it knows it needs to create a map with named items.
+            -->
+            <assign to="approvalReport{result}">$receiveApproval{result}</assign>
+            <assign to="approvalReport{comments}">$receiveApproval{comments}</assign>
+            <!--
+                The "DisplayProcessor" is used to present an arbitrary report to the user. Note also how we set "hidden" to false given that "process" steps 
+                are hidden by default.
+
+                We could have skipped this step and added instead a "verify" step to check the approval status, along with making the earlier "receive" step visible
+                to share the administrator's comments. Its better for the tester however to hide such steps and show one step with a single report where all this is presented together.
+            -->
+            <process id="reportApproval" hidden="false" desc="Administrator approved?" handler="DisplayProcessor">
+                <input name="result">$approvalResult</input>
+                <input name="parameters">$approvalReport</input>
+            </process>
+        </group>
+    </steps>
+    <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
+    <output>
+        <success>
+            <default>"Test case completed successfully."</default>
+        </success>
+        <failure>
+            <!-- You can refer to the outcome of specific steps (using the steps' ID) to report specific outcome messages. -->
+            <case>
+                <cond>$STEP_STATUS{validateAllergy} = 'ERROR'</cond>
+                <message>"The submitted allergy failed validation."</message>
+            </case>
+            <case>
+                <cond>$STEP_STATUS{verifyAllergyHasExpectedCode} = 'ERROR'</cond>
+                <message>"The submitted allergy did not refer to the expected substance code (" || $expectedCode || ")."</message>
+            </case>
+            <case>
+                <cond>$STEP_STATUS{receiveApproval} = 'ERROR'</cond>
+                <message>"The test session was not approved in time by an administrator."</message>
+            </case>
+            <case>
+                <cond>$STEP_STATUS{reportApproval} = 'ERROR'</cond>
+                <message>"The administrator rejected the evidence you provided."</message>
+            </case>
+            <!-- If no specific case is matched print a default message. -->
+            <default>"Test case failed. Please check the failed step's report for more information and the test log."</default>
+        </failure>
+    </output>    
+</testcase>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scriptlet id="registerAllergy" xmlns="http://www.gitb.com/tdl/v1/">
+    <!--
+        Scriptlet used to create and submit an allergy to a FHIR server.
+    -->
+    <params>
+        <var name="patient" type="string"><value>Patient/example</value></var>
+        <var name="asserter" type="string"><value>Patient/example</value></var>
+        <var name="recorder" type="string"><value>Practitioner/practitioner</value></var>
+        <var name="codeCode" type="string"/>
+        <var name="codeText" type="string"/>
+        <var name="codeDisplay" type="string"/>
+        <var name="reactionCode" type="string"/>
+        <var name="reactionDisplay" type="string"/>
+    </params>       
+    <steps>
+        <!--
+            First we create the allergy.
+        -->
+        <call path="scriptlets/createAllergy.xml" output="allergy">
+            <input name="codeCode">$codeCode</input>
+            <input name="codeDisplay">$codeDisplay</input>
+            <input name="codeText">$codeText</input>
+            <input name="reactionCode">$reactionCode</input>
+            <input name="reactionDisplay">$reactionDisplay</input>
+        </call>
+        <!--
+            Second we submit it to the FHIR server.
+        -->
+        <call path="scriptlets/submitAllergy.xml" output="result">
+            <input name="content">$allergy{content}</input>
+        </call>
+        <!--
+            Finally we do a series of checks to make sure the submission was successful.
+        -->
+        <verify handler="StringValidator" desc="Verify status code">
+            <input name="actualstring">$result{status}</input>
+            <input name="expectedstring">"201"</input>            
+        </verify>
+        <process handler="JSONPointerProcessor" operation="process" output="resourceCode">
+            <input name="content">$result{payload}</input>
+            <input name="pointer">"/code/coding/0/code"</input>
+        </process>
+        <verify handler="StringValidator" desc="Verify allergy is correct">
+            <input name="actualstring">$resourceCode</input>
+            <input name="expectedstring">$codeCode</input>            
+        </verify>
+        <process handler="JSONPointerProcessor" operation="process" output="identifier">
+            <input name="content">$result{payload}</input>
+            <input name="pointer">"/id"</input>
+        </process>        
+    </steps>
+    <!--
+        When returning an output you can also just refer to a variable that exists in the scriptlet's execution context (see the output of the last step).
+    -->
+    <output name="identifier"/>
+</scriptlet>

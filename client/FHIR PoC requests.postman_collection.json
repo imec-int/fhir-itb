@@ -1,0 +1,52 @@
+{
+	"info": {
+		"_postman_id": "55e769c0-d996-4f38-8eeb-9a4fca6bd816",
+		"name": "FHIR PoC requests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13501417"
+	},
+	"item": [
+		{
+			"name": "TC1 client - POST allergy",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/fhir+json;fhirVersion=4.0",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/fhir+json;fhirVersion=4.0",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"resourceType\" : \"AllergyIntolerance\",\r\n  \"id\" : \"allergyintolerance1\",\r\n  \"meta\" : {\r\n    \"profile\" : [\"https://www.ehealth.fgov.be/standards/fhir/allergy/StructureDefinition/be-allergyintolerance\"]\r\n  },\r\n  \"extension\" : [{\r\n    \"url\" : \"https://www.ehealth.fgov.be/standards/fhir/allergy/StructureDefinition/be-ext-allergy-type\",\r\n    \"valueCodeableConcept\" : {\r\n      \"coding\" : [{\r\n        \"system\" : \"http://snomed.info/sct\",\r\n        \"code\" : \"609328004\"\r\n      }]\r\n    }\r\n  }],\r\n  \"clinicalStatus\" : {\r\n    \"coding\" : [{\r\n      \"system\" : \"http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical\",\r\n      \"code\" : \"active\",\r\n      \"display\" : \"Active\"\r\n    }]\r\n  },\r\n  \"verificationStatus\" : {\r\n    \"coding\" : [{\r\n      \"system\" : \"http://terminology.hl7.org/CodeSystem/allergyintolerance-verification\",\r\n      \"code\" : \"unconfirmed\"\r\n    }]\r\n  },\r\n  \"category\" : [\"food\"],\r\n  \"criticality\" : \"high\",\r\n  \"code\" : {\r\n    \"coding\" : [{\r\n      \"system\" : \"http://snomed.info/sct\",\r\n      \"code\" : \"762952008\",\r\n      \"display\" : \"Peanut (substance)\"\r\n    }],\r\n    \"text\" : \"Allergic to peanut\"\r\n  },\r\n  \"patient\" : {\r\n    \"reference\" : \"Patient/example\"\r\n  },\r\n  \"onsetDateTime\" : \"2004\",\r\n  \"recordedDate\" : \"2014-10-09T14:58:00+11:00\",\r\n  \"recorder\" : {\r\n    \"reference\" : \"Practitioner/practitioner\"\r\n  },\r\n  \"asserter\" : {\r\n    \"reference\" : \"Patient/example\"\r\n  },\r\n  \"lastOccurrence\" : \"2012-06\",\r\n  \"note\" : [{\r\n    \"text\" : \"Some extra information can be given here.\"\r\n  }],\r\n  \"reaction\" : [{\r\n    \"manifestation\" : [{\r\n      \"coding\" : [{\r\n        \"system\" : \"http://snomed.info/sct\",\r\n        \"code\" : \"39579001\",\r\n        \"display\" : \"Anaphylactic reaction\"\r\n      }]\r\n    }],\r\n    \"onset\" : \"2012-06-12\",\r\n    \"severity\" : \"severe\"\r\n  }]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9002/fhir/server/api/AllergyIntolerance",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9002",
+					"path": [
+						"fhir",
+						"server",
+						"api",
+						"AllergyIntolerance"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

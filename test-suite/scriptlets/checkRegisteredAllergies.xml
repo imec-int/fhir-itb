@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scriptlet id="checkRegisteredAllergies" xmlns="http://www.gitb.com/tdl/v1/">
+    <!--
+        Scriptlet used to check a patient's registered allergies against a set of reference data.
+    -->
+    <params>
+        <var name="patient" type="string"><value>example</value></var>
+        <var name="expectedData" type="list[map]"/>
+    </params>
+    <steps>
+        <!--
+            The "send" is the counterpart of "receive". It calls a messaging service and blocks for a synchronous response. Although the
+            test engine blocks the "send" can also be used for asynchronous messaging. What is important is that the messaging service
+            returns a synchronous report, but for the actual message exchange with a remote system, it could have also done this via
+            asynchronous means.
+        -->
+        <send id="getAllergies" desc="Get patient allergies" from="client" to="server" handler="$DOMAIN{messagingServiceAddress}">
+            <input name="endpoint">$SYSTEM{serverApiRoot} || "/AllergyIntolerance?patient="||$patient</input>
+            <input name="type">"get"</input>
+        </send>
+        <!-- 
+            Notice here the $getAllergies{response}{status} reference. This is an example of referring to a nested map:
+            "getAllergies" is the first map (the name corresponding to the ID of the "send" step), wheareas "response"
+            is a nexted map therein.
+
+            Also here, note that whenever a step returns a report, the context items of the report (set by the messaging
+            service in this case) are placed in a map named using the step's ID.
+        -->
+        <verify handler="StringValidator" desc="Verify status code">
+            <input name="actualstring">$getAllergies{response}{status}</input>
+            <input name="expectedstring">"200"</input>
+        </verify>
+        <process handler="JSONPointerProcessor" operation="process" output="totalAllergies">
+            <input name="content">$getAllergies{response}{payload}</input>
+            <input name="pointer">"/total"</input>
+        </process>
+        <!-- 
+            The "CollectionUtils" handler provides simple utilities for collection types.
+            In this case we count the size of the "expectedData" parameter to know how many
+            verification iterations we are doing.
+        -->
+        <process handler="CollectionUtils" operation="size" output="expectedTotal">
+            <input name="list">$expectedData</input>
+        </process>
+        <verify handler="NumberValidator" desc="Verify number of registered allergies">
+            <input name="actualnumber">$totalAllergies</input>
+            <input name="expectednumber">$expectedTotal</input>
+        </verify>
+        <!--
+            The "foreach" step can be used to make an arbitrary number of iterations of a block of steps. For the test case in question
+            as we know we have two allergy submissions we could have simply added two sets of steps. However using the "foreach" step
+            we make this generaic so that you can use the same scriptlet for any number of submissions to check.
+
+            Nonetheless, usually one uses the "foreach" step when you don't know in advance how many iterations you will make (for 
+            example if the items to validate are based on user-provided input or earlier message exchanges).
+        -->
+        <foreach title="Loop allergies" desc="Verify that allergy matches" counter="index" start="0" end="$expectedTotal">
+            <do>
+                <process handler="JSONPointerProcessor" operation="process" output="reportedIdentifier">
+                    <input name="content">$getAllergies{response}{payload}</input>
+                    <input name="pointer">"/entry/" || $index || "/resource/id"</input>
+                </process>
+                <process handler="JSONPointerProcessor" operation="process" output="reportedCode">
+                    <input name="content">$getAllergies{response}{payload}</input>
+                    <input name="pointer">"/entry/" || $index || "/resource/code/coding/0/code"</input>
+                </process>
+                <log>"Checking that reported ID ["||$reportedIdentifier||"] and code ["||$reportedCode||"] match expected ID ["||$expectedData{$index}{identifier}||"] and code ["||$expectedData{$index}{code}||"]."</log>
+                <verify handler="StringValidator" desc="Verify identifier">
+                    <input name="actualstring">$reportedIdentifier</input>
+                    <!-- 
+                        Notice here the expression syntax. We are using a variable reference "$index" to dynamically look up an entry in the "expectedData" list.
+                    -->
+                    <input name="expectedstring">$expectedData{$index}{identifier}</input>
+                </verify>
+                <verify handler="StringValidator" desc="Verify code">
+                    <input name="actualstring">$reportedCode</input>
+                    <input name="expectedstring">$expectedData{$index}{code}</input>
+                </verify>
+            </do>
+        </foreach>
+    </steps>
+</scriptlet>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Management</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+
+<body>
+  <div class="container mt-4">
+    <h2>Package Upload</h2>
+    <p id="server-status" class="status-searching">Searching for server...</p>
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs" id="customTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="package-tab" data-bs-toggle="tab" href="#package" role="tab"
+          aria-controls="package" aria-selected="true">Published Package</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="local-tab" data-bs-toggle="tab" href="#local" role="tab" aria-controls="local"
+          aria-selected="false">Local Package</a>
+      </li>
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content" id="customTabsContent">
+      <!-- Published Package Tab Content -->
+      <div class="tab-pane fade show active p-3" id="package" role="tabpanel" aria-labelledby="package-tab">
+        IG URL: <strong><span id="igUrlLabel"></span></strong>
+        <p></p>
+        <div class="mb-3">
+          <button id="refreshPackageBtn" class="btn btn-secondary">Load from published package</button>
+        </div>
+
+      <!-- Table to display resources -->
+      <p> &nbsp;</p>
+      <p> </p>
+      <h3>Resources in Package</h3>
+      <div class="table-responsive mb-3" style="max-height: 500px; overflow-y: scroll;">
+        <button id="uploadOnlineBtn" class="btn btn-primary">Upload package resources to server</button>
+        <br />
+        <br />
+        <table class="table table-bordered" id="localFileList">
+          <thead>
+            <tr>
+              <th>Resource Type</th>
+              <th>Resource ID</th>
+              <th>Resource Json</th>
+            </tr>
+          </thead>
+          <tbody id="resourceTableBody">
+            <!-- Resource rows will be added dynamically here -->
+          </tbody>
+        </table>
+      </div>
+
+      </div>
+
+      <!-- Local Database Tab Content -->
+      <div class="tab-pane fade p-3" id="local" role="tabpanel" aria-labelledby="local-tab">
+        Local Package:<strong><span id="localFileLabel">...</span></strong>
+        <p></p>
+        <input type="file" id="localFileInput" class="form-control">
+        <div class="mb-3">
+          <button id="refreshLocalBtn" class="btn btn-secondary">Load from local package</button>
+        </div>
+
+      <!-- Table to display resources -->
+      <p> &nbsp;</p>
+      <p> </p>
+      <h3>Resources in Package</h3>
+      <div class="table-responsive mb-3" style="max-height: 500px; overflow-y: scroll;">
+        <button id="uploadLocalBtn" class="btn btn-primary">Upload package resources to server</button>
+        <br />
+        <br />
+        <table class="table table-bordered" id="localFileList">
+          <thead>
+            <tr>
+              <th>Resource Type</th>
+              <th>Resource ID</th>
+              <th>Resource Json</th>
+            </tr>
+          </thead>
+          <tbody id="resourceTableBody">
+            <!-- Resource rows will be added dynamically here -->
+          </tbody>
+        </table>
+      </div>
+
+
+      </div>
+
+
+
+    </div>
+
+    <br />
+    <hr>
+
+  </div>
+
+  <style>
+    .tab-content>.tab-pane {
+      transition-duration: 0.05s;
+      /* Adjust this value to your preference */
+    }
+
+    .tab-content>.tab-pane {
+      background-color: #f7f7f7;
+      /* Adjust this color to your preference */
+      border: 1px solid #e0e0e0;
+      /* Optional: adds a light border around the content */
+      border-radius: 4px;
+      /* Optional: rounds the corners of the content */
+      padding: 15px;
+      /* Adjust padding if necessary */
+      /*height: 200px;*/
+    }
+  </style>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/0.5.0/js/sql.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-untar@2.0.0/build/dist/untar.min.js"></script>
+  
+
+  <script>
+    let serverUrl = "";
+    var serverInterval = 5000;
+    // Fetching data from config.json
+    fetch('config.json')
+      .then(response => response.json())
+      .then(data => {
+        serverUrl = data.server_url;
+
+        var fetchServer = function () {
+          fetch(serverUrl + '/metadata')
+            .then(response => {
+              if (response.ok) {
+                clearInterval(serverInterval);
+                $("#server-status")
+                  .removeClass('status-searching')
+                  .addClass('status-found')
+                  .text("Server found at: " + serverUrl);
+              }
+            })
+            .catch(error => console.error("Error:", error));
+        };
+        fetchServer();
+        serverInterval = setInterval(fetchServer, 5000);
+
+      })
+      .catch(error => {
+        console.error('Error fetching config.json:', error);
+        alert('Failed to fetch configuration data.');
+      });
+
+
+
+
+
+    // Handling tab switching
+    function openTab(tabName) {
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(tab => tab.style.display = 'none');
+      document.getElementById(tabName).style.display = 'block';
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    document.getElementById('refreshLocalBtn').addEventListener('click', function () {
+    const fileInput = document.getElementById('localFileInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('Please choose a file to list its content.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+        const base64String = event.target.result.split(',')[1];
+        const byteChars = atob(base64String);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) {
+            byteNumbers[i] = byteChars.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+
+        // Decompress using pako
+        const decompressed = pako.inflate(byteArray);
+
+        // Use js-untar to handle the tar archive
+        window.untar(decompressed.buffer)
+            .progress(function (extractedFile) {
+                // Do something with a single extracted file.
+            })
+            .then(function (extractedFiles) {
+                const fileListTable = document.getElementById('localFileList').querySelector('tbody');
+                fileListTable.innerHTML = ""; // Clear previous entries
+
+                extractedFiles.forEach(file => {
+                    const row = fileListTable.insertRow();
+                    const cell = row.insertCell(0);
+                    cell.textContent = file.name;
+                });
+            })
+            .catch(function (err) {
+                console.error("Error extracting tarball:", err);
+                alert("Failed to extract package content.");
+            });
+    };
+
+    reader.readAsDataURL(file);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // Upload the resources to the server
+    document.getElementById('uploadLocalBtn').addEventListener('click', function () {
+      const fileInput = document.getElementById('localFileInput');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert('Please choose a file to upload.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const base64String = event.target.result.split(',')[1];
+
+        // Prepare the body data as a Parameters resource
+        const bodyData = {
+          resourceType: "Parameters",
+          parameter: [{
+            name: "npmContent",
+            valueBase64Binary: base64String
+          }]
+        };
+
+        fetch(`${serverUrl}/ImplementationGuide/$install`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/fhir+json'
+          },
+          body: JSON.stringify(bodyData)
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.resourceType === 'Parameters') {
+              const label = document.createElement('label');
+              label.textContent = "Package uploaded";
+              document.body.appendChild(label);
+            } else {
+              alert('Unexpected response from server.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to upload package: ' + error.message);
+          });
+      };
+
+      reader.readAsDataURL(file);
+    });
+  </script>
+
+</body>
+
+</html>

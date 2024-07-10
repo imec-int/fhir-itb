@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scriptlet id="setupData" xmlns="http://www.gitb.com/tdl/v1/">
+    <!--
+        Scriptlet used to take care of any setup steps before test cases. This is used both to
+        set up a FHIR server as a SUT and also the Test Bed's own internal FHIR server.
+    -->
+    <imports>
+        <artifact type="binary" encoding="UTF-8" name="dataset">resources/setupbundle.json</artifact>
+    </imports>
+    <params>
+        <var name="ingestData" type="string"/>
+        <var name="serverApiRoot" type="string"/>
+        <var name="setupMessage" type="string"><value>Set up your test dataset</value></var>
+        <var name="deleteMessage" type="string"><value>Delete your registered allergies</value></var>
+    </params>       
+    <steps>
+        <!--
+            Pass test configuration to the supporting service.
+        -->
+        <process desc="Setup configuration" handler="$DOMAIN{processingServiceAddress}" operation="init">
+            <input name="endpoint">$DOMAIN{embeddedFhirServerEndpoint}</input>
+        </process>
+        <!--
+            Here we set the "if" step as hidden but with an explicitly visible "then" block. The result of this is to show only
+            the contained steps from the "then" block without an extra container for the "if". This is purely to make for a visually
+            simpler execution diagram.
+        -->
+        <if hidden="true">
+            <cond>$ingestData = 'Y'</cond>
+            <then hidden="false">
+                <log>"Setting up test dataset."</log>
+                <!--
+                    Notice here how the description is set dynamically. This is allowed for scriptlets, making it possible
+                    to reuse them in more test cases. The only requirements for such dynamic descriptions is to be able to 
+                    resolve referenced values at test case load time.
+                -->
+                <send id="setupData" desc="$setupMessage" from="client" to="server" handler="$DOMAIN{messagingServiceAddress}">
+                    <input name="endpoint">$serverApiRoot || "/"</input>
+                    <input name="type">"post"</input>
+                    <input name="payload">$dataset</input>
+                </send>
+            </then>
+        </if>
+        <log>"Deleting patient allergies."</log>
+        <send id="deleteAllergies" desc="$deleteMessage" from="client" to="server" handler="$DOMAIN{messagingServiceAddress}">
+            <input name="endpoint">$serverApiRoot || "/AllergyIntolerance?_type=AllergyIntolerance"</input>
+            <input name="type">"delete"</input>
+        </send>
+    </steps>
+</scriptlet>

@@ -1,0 +1,21 @@
+@host = http://localhost:9002/fhir/server/api
+
+###
+GET {{host}}/metadata HTTP/1.1
+Accept: application/fhir+json;fhirVersion=4.0
+Content-Type: application/fhir+json;fhirVersion=4.0
+
+### TEST 1: Send allergy
+POST {{host}}/AllergyIntolerance HTTP/1.1
+Accept: application/fhir+json;fhirVersion=4.0
+Content-Type: application/fhir+json;fhirVersion=4.0
+
+< ./allergy1.json
+
+
+###
+POST {{host}}/AllergyIntolerance HTTP/1.1
+Accept: application/fhir+json;fhirVersion=4.0
+Content-Type: application/fhir+json;fhirVersion=4.0
+
+< ./allergy1a.json

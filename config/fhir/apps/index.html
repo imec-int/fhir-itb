@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown Content Page</title>
+<!-- Include Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link rel="icon" href="favicon.png" sizes="32x32" />    
+<!-- Include Marked.js for Markdown to HTML conversion -->
+<style>
+  .logo img {
+    max-width: 100%;
+    height: auto;
+  }
+</style>
+</head>
+<body>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="logo text-center mb-3">
+        <img src="logo.jpg" alt="Company Logo" style="height:210px">
+      </div>
+
+      <p class="text-justify">Welcome to the HL7 Belgium test server.</p>
+
+  <!-- Container for the Markdown content -->
+  <div id="markdownContent" class="bg-light p-3 border rounded"></div>
+
+  <script type="text/markdown" id="markdown">
+## Welcome to the HL7 Belgium Test server
+
+  This server does the following:
+
+  * This
+  * That
+  * And much more
+
+  For more details, [visit the project website](http://www.example.com).
+  </script>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/showdown/dist/showdown.min.js"></script>
+
+
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+      var markdownContent = document.getElementById('markdown').innerText;
+      var converter = new showdown.Converter(),
+      html = converter.makeHtml(markdownContent);
+      document.getElementById('markdownContent').innerHTML = html;
+    });
+  </script>
+
+
+
+<!-- Include Bootstrap JS and its dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+</body>
+</html>

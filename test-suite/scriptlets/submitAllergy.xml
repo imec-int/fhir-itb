@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scriptlet id="submitAllergy" xmlns="http://www.gitb.com/tdl/v1/">
+    <!--
+        Scriptlet used to submit an allergy to a FHIR server.
+    -->
+    <params>
+        <var name="content" type="string"/>
+    </params>       
+    <steps>
+        <!--
+            There is only a single step in this scriptlet but its a nice approach to define something like this as a
+            reusable building block in case we want to elaborate it further (even by adding simple logging).
+        -->
+        <send id="sendAllergy" desc="Submit allergy" from="client" to="server" handler="$DOMAIN{messagingServiceAddress}">
+            <input name="endpoint">$SYSTEM{serverApiRoot} || "/AllergyIntolerance"</input>
+            <input name="type">"post"</input>
+            <input name="payload">$content</input>
+        </send>
+    </steps>
+    <output name="result">$sendAllergy{response}</output>
+</scriptlet>

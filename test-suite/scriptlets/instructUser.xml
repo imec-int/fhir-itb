@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scriptlet id="instructUser" xmlns="http://www.gitb.com/tdl/v1/">
+    <!--
+        Scriptlet used to display and log an instruction message for the user.
+    -->
+    <params>
+        <var name="message" type="string"/>
+    </params>
+    <steps>
+        <!--
+            We could have just used the "interact" step directly in test cases and other scriptlets to present
+            the help messages. However by doing it in a scriptlet we centralise the implementation of this as
+            a reusable building block. This allows us to define in one place also the check on whether or not 
+            we should be displaying such messages (based on the organisation's preference).
+        -->
+        <log>$message</log>
+        <if hidden="true">
+            <!-- Notice how here we refer to an ORGANISATION-level configuration parameter (set by the user). -->
+            <cond>$ORGANISATION{verboseHelp} = 'Y'</cond>
+            <then>
+                <!--
+                    The "interact" step is used for user prompts. We can both show instructions and receive inputs
+                    and manage multiple instructions/inputs in one go.
+
+                    If we are running a test headlessly "interact" steps are skipped. This is fine for instructions
+                    but may be problematic when we expect inputs. Inputs can be provided via the REST API to replace
+                    values obtained through prompts but even this is not enough if the prompts are needed to collect
+                    dynamic information during the test session.
+                -->
+                <interact inputTitle="Test case information">
+                    <instruct desc="Next step" forceDisplay="true">$message</instruct>
+                </interact>                
+            </then>
+        </if>
+    </steps>
+</scriptlet>

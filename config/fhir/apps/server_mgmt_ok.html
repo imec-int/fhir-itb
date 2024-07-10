@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Management</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h2>Package Upload</h2>
+    <p id="server-status" class="status-searching">Searching for server...</p>
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs" id="customTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="package-tab" data-bs-toggle="tab" href="#package" role="tab" aria-controls="package" aria-selected="true">Published Package</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="local-tab" data-bs-toggle="tab" href="#local" role="tab" aria-controls="local" aria-selected="false">Local Package</a>
+        </li>
+    </ul>
+
+    <!-- Tabs Content -->
+    <div class="tab-content" id="customTabsContent">
+        <!-- Published Package Tab Content -->
+        <div class="tab-pane fade show active p-3" id="package" role="tabpanel" aria-labelledby="package-tab">
+            IG URL: <strong><span id="igUrlLabel"></span></strong><p></p>
+            <div class="mb-3">
+                <button id="refreshPackageBtn" class="btn btn-secondary">Load from published package</button>
+            </div>
+        </div>
+
+        <!-- Local Database Tab Content -->
+        <div class="tab-pane fade p-3" id="local" role="tabpanel" aria-labelledby="local-tab">
+                Local Package:<strong><span id="localFileLabel">...</span></strong><p></p>
+                <input type="file" id="localFileInput" class="form-control">
+            <div class="mb-3">
+                <button id="refreshLocalBtn" class="btn btn-secondary">Load from local package</button>
+            </div>
+        </div>
+    </div>
+
+    <br/>
+    <hr>  
+    <!-- Table to display resources -->
+    <p> &nbsp;</p>
+    <p> </p>
+    <h3>Resources in Package</h3>
+    <div class="table-responsive mb-3" style="max-height: 500px; overflow-y: scroll;">
+      <button id="uploadBtn" class="btn btn-primary">Upload package resources to server</button>
+      <br/>
+      <br/>
+      <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Resource Type</th>
+                    <th>Resource ID</th>
+                    <th>Resource Json</th>
+                </tr>
+            </thead>
+            <tbody id="resourceTableBody">
+                <!-- Resource rows will be added dynamically here -->
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<style>
+  .tab-content > .tab-pane {
+      transition-duration: 0.05s; /* Adjust this value to your preference */
+  }
+  .tab-content > .tab-pane {
+        background-color: #f7f7f7; /* Adjust this color to your preference */
+        border: 1px solid #e0e0e0; /* Optional: adds a light border around the content */
+        border-radius: 4px; /* Optional: rounds the corners of the content */
+        padding: 15px; /* Adjust padding if necessary */
+        height: 200px;
+    }
+</style>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/0.5.0/js/sql.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-untar@1.0.2/dist/untar.min.js"></script>
+    
+
+    <script>
+    $(document).ready(function () {
+      let serverUrl;
+      let resourcesBaseUrl;
+      let commit = true;
+      let selectedPackageSource = ''; // Variable to store the selected package source
+      let resourceList = [];
+
+      // Function to fetch server information
+      var fetchServer = function () {
+        fetch(serverUrl + '/metadata')
+          .then(response => {
+            if (response.ok) {
+              clearInterval(serverInterval);
+              $("#server-status")
+                .removeClass('status-searching')
+                .addClass('status-found')
+                .text("Server found at: " + serverUrl);
+            }
+          })
+          .catch(error => console.error("Error:", error));
+      };
+      fetchServer();
+      var serverInterval = setInterval(fetchServer, 5000);
+
+      fetch('/config.json')
+        .then(response => response.json())
+        .then(config => {
+          serverUrl = config.server_url;
+          resourcesBaseUrl = config.ig_url;
+
+          var serverInterval = setInterval(fetchServer, 3000);
+
+          $("#refreshLocalBtn").click(function () {
+            selectedPackageSource = 'local';
+            resourcesBaseUrl = "./output/";
+            // Move the function call here
+            fetchAndProcessSQLData();
+          });
+
+          $("#refreshPackageBtn").click(function () {
+            selectedPackageSource = 'server';
+            resourcesBaseUrl = config.ig_url;
+            // Move the function call here
+            fetchAndProcessSQLData();
+          });
+
+          // Initialize the table with an empty resourceList
+          var tableBody = document.getElementById("resourceTableBody");
+          tableBody.innerHTML = "";
+
+          $("#uploadBtn").click(function () {
+            if (selectedPackageSource === 'local' || selectedPackageSource === 'server') {
+              // Call the function to process resources when the button is clicked
+              processAllResources(resourceList);
+            }
+          });
+
+          function processResource(resourceType, resourceId) {
+            fetch(`${resourcesBaseUrl}${resourceType}-${resourceId}.json`)
+              .then(response => response.json())
+              .then(resourceData => {
+                if (resourceType === "Bundle") {
+                  if (resourceData.type === "collection" && resourceData.entry) {
+      // Check if the entire Bundle should be PUT
+      if (commit) {
+        // Process a PUT request for the entire Bundle
+        const putUrl = `${serverUrl}/${resourceType}/${resourceId}`;
+        fetch(putUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(resourceData)
+        })
+          .then((response) => {
+            console.log("PUT Bundle Response: ", response);
+          })
+          .catch((error) => {
+            console.error("PUT Bundle Error: ", error);
+          });
+      } else {
+        // Log what would have been done if commit is false
+        console.log("Would PUT the entire Bundle to: " + serverUrl);
+        console.log("Data: ", resourceData);
+      }
+
+                    // Iterate through all entries in the collection
+                    resourceData.entry.forEach(entry => {
+                      if (commit) {
+                        // Process a PUT request for each resource entry if commit is true
+                        const putUrl = `${serverUrl}/${entry.resource.resourceType}/${entry.resource.id}`;
+                        fetch(putUrl, {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(entry.resource)
+                        }).then(response => {
+                          console.log("PUT Response: ", response);
+                        }).catch(error => {
+                          console.error("PUT Error: ", error);
+                        });
+                      } else {
+                        // Log what would have been done if commit is false
+                        console.log("Would PUT to: " + serverUrl);
+                        console.log("Data: ", entry.resource);
+                      }
+                    });
+                  } else if (resourceData.type === "transaction") {
+                    if (false) {
+                      // Process a POST request if commit is true
+                      fetch(serverUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(resourceData)
+                      }).then(response => {
+//                        console.log("POST Response: ", response);
+                      }).catch(error => {
+//                        console.error("POST Error: ", error);
+                      });
+                    } else { 
+                      // Log what would have been done if commit is false
+                      console.log("Would POST to: " + serverUrl);
+                      console.log("Data: ", resourceData); 
+                    }
+                  }
+                } else {
+                  const putUrl = `${serverUrl}/${resourceType}/${resourceId}`;
+                  if (false) {
+                    // Process a PUT request if commit is true
+                    fetch(putUrl, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(resourceData)
+                    }).then(response => {
+//                      console.log("PUT Response: ", response);
+                    }).catch(error => {
+//                      console.error("PUT Error: ", error);
+                    });
+                  } else {
+                    // Log what would have been done if commit is false
+//                    console.log("Would PUT to: " + serverUrl);
+//                    console.log("Data: ", resourceData);
+                  }
+                }
+              })
+              .catch(error => console.error(`Error loading the resource (${resourceType}-${resourceId}):`, error));
+          }
+
+          // Function to process all resources
+          function processAllResources(resourceList) {
+            // Check if resourceList is empty
+            if (resourceList.length === 0) {
+              console.error('Resource list is empty.');
+              return; // Exit the function if the list is empty
+            }
+
+            resourceList.forEach(resource => {
+              var resourceType = resource[0];
+              var resourceId = resource[1];
+              processResource(resourceType, resourceId);
+//              console.log(resource[2]);
+            });
+          }
+
+          // Function to fetch and process SQL data
+          var fetchAndProcessSQLData = function () {
+            fetch(resourcesBaseUrl + 'package.db')
+              .then(response => response.arrayBuffer())
+              .then(dbBuffer => {
+                var db = new SQL.Database(new Uint8Array(dbBuffer));
+
+                // Get a list of all resources (type and id) and add them to the table
+                var resourceListData = db.exec("SELECT Type, Id, Json FROM Resources;");
+                if (resourceListData[0]) {
+                  resourceList = resourceListData[0].values; // Access resource list here
+
+                  resourceList.forEach(resource => {
+                    var resourceType = resource[0];
+                    var resourceId = resource[1];
+//                    var numericJson = resource[2]; // Numeric values representing JSON
+
+                    // Convert the numeric values back to a JSON string
+//                    var jsonString = String.fromCharCode.apply(null, numericJson);
+                    //                                        var resourceJson = JSON.parse(jsonString);
+//                    var resourceJson = jsonString;
+                    //var resourceJson = numericJson;
+
+
+                    // Create a new row for each resource
+                    var newRow = tableBody.insertRow();
+                    var typeCell = newRow.insertCell(0);
+                    var idCell = newRow.insertCell(1);
+                    var jsonCell = newRow.insertCell(2);
+                    typeCell.textContent = resourceType;
+                    idCell.textContent = resourceId;
+              //      jsonCell.textContent = resourceJson;
+                  });
+                } else {
+                  console.error('No resources found in the database.');
+                }
+
+                db.close();
+              })
+              .catch(error => console.error('Error loading the database:', error));
+          };
+
+          // Don't call fetchAndProcessSQLData here, it will be called when buttons are clicked
+
+        })
+        .catch(error => {
+          console.error('Error fetching config:', error);
+        });
+
+
+
+
+
+
+        document.getElementById('refreshLocalBtn').addEventListener('click', function () {
+          const fileInput = document.getElementById('localFileInput');
+          const file = fileInput.files[0];
+
+          if (!file) {
+              alert('Please choose a file to upload.');
+              return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            const base64String = event.target.result.split(',')[1];
+            const byteChars = atob(base64String);
+            const byteNumbers = new Array(byteChars.length);
+            for (let i = 0; i < byteChars.length; i++) {
+                byteNumbers[i] = byteChars.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+
+            // Decompress using pako
+            const decompressed = pako.inflate(byteArray);
+
+            // Use js-untar to handle the tar archive
+            Untar(decompressed.buffer).then(files => {
+                const fileNames = files.map(file => file.name);
+                alert("Files in the package:\n" + fileNames.join('\n'));
+              
+              
+
+                // Prepare the body data as a Parameters resource
+                const bodyData = {
+                    resourceType: "Parameters",
+                    parameter: [{
+                        name: "npmContent",
+                        valueBase64Binary: base64String
+                    }]
+                };
+
+                fetch(serverUrl+'/ImplementationGuide/$install', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/fhir+json'
+                    },
+                    body: JSON.stringify(bodyData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Assuming the server sends some form of success response. You might need to adjust this check.
+                    if (data.resourceType === 'Parameters') {
+                        // Create a label and add it to the body (or any other desired location)
+                        const label = document.createElement('label');
+                        label.textContent = "Package uploaded";
+                        document.body.appendChild(label);
+                    } else {
+                        alert('Unexpected response from server.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to upload package: ' + error.message);
+                });
+
+            }).catch(err => {
+              console.error("Error extracting tarball:", err);
+              alert("Failed to extract package content.");
+            });
+
+
+          };
+          
+          reader.readAsDataURL(file);
+      });
+
+
+
+
+
+
+
+        
+    });
+  </script>
+</body>
+
+</html>
