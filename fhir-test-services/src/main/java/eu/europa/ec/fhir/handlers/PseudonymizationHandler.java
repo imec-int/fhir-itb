@@ -18,7 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import org.imec.ivlab.ehealth.automation.PseudonymGenerator;
+import eu.europa.ec.fhir.pseudo.PseudonymGenerator;
 
 /**
  * Component to handle the pseudonymization of FHIR resources.
@@ -38,28 +38,19 @@ public class PseudonymizationHandler{
        public String pseudoGenerator(String configFilePath, String ssin) {
            String certificateFilePath = null; // Placeholder, should be provided
            String expectedPatient = null;
-           // Load configuration files
-           Properties config = new Properties();
-           try (FileInputStream input = new FileInputStream(configFilePath)) {
-               config.load(input);
-           } catch (IOException e) {
-               LOG.info("Config file not found at specified location. Using default values.");
-           }
-           certificateFilePath = config.getProperty("certificateFilePath", certificateFilePath);
+           File configFile = new File(configFilePath);
            PseudonymGenerator generator = new PseudonymGenerator();
-           if (certificateFilePath != null) {
-               System.out.println(certificateFilePath);
-               File certificateFile = new File(certificateFilePath);
-                expectedPatient = generator.generatePseudonym(certificateFile,ssin);
+           if (configFilePath != null) {
+               expectedPatient = generator.generateBase64EncodedPseudonym(configFile);
                LOG.info(String.format("Pseudonymised patient info : [%s]:. ", expectedPatient));
            } else {
-               LOG.info("Either base64EncodedString or certificateFilePath must be provided.");
+               LOG.info("configFilePath must be provided.");
            }
            return expectedPatient;
        }
 //
-//       public static void main(String[] args) {
-//           PseudonymizationHandler instance = new PseudonymizationHandler();
-//           instance.pseudoGenerator("resources/config.properties");
-//       }
+       public static void main(String[] args) {
+           PseudonymizationHandler instance = new PseudonymizationHandler();
+           instance.pseudoGenerator("resources/config.properties", "1123");
+       }
 }
