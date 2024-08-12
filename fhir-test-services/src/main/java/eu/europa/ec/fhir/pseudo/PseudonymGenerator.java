@@ -21,7 +21,7 @@ public class PseudonymGenerator {
      * @param configFilePath The file containing the configuration properties.
      * @return A Base64 encoded pseudonym string.
      */
-    public String generateBase64EncodedPseudonym(File configFilePath) {
+    public String generateBase64EncodedPseudonym(File configFilePath, String ssinInput) {
         String domainKey;
         String clientId;
         String realm;
@@ -37,7 +37,6 @@ public class PseudonymGenerator {
 
             try (FileInputStream input = new FileInputStream(configFilePath)) {
                 config.load(input);
-                System.out.println(config.toString());
                 // Get values from properties, error if any are missing
                 domainKey = getRequiredProperty(config, "domain.key");
                 clientId = getRequiredProperty(config, "client.id");
@@ -45,7 +44,11 @@ public class PseudonymGenerator {
                 certificatePassword = getRequiredProperty(config, "certificatePassword");
                 identifier = getRequiredProperty(config, "identifier");
                 ehealthFromHeaderValue = getRequiredProperty(config, "ehealth.from.header.value");
-                ssin = getRequiredProperty(config, "ssin");
+                if (!ssinInput.isBlank()) {
+                    ssin = ssinInput;
+                } else {
+                    ssin = getRequiredProperty(config, "ssin");
+                }
                 certificateFilePath = getRequiredProperty(config, "certificateFilePath");
             } catch (IOException e) {
                 throw new RuntimeException("Error reading config file: " + e.getMessage(), e);
@@ -133,16 +136,5 @@ public class PseudonymGenerator {
             throw new IllegalArgumentException("Missing required configuration property: " + property);
         }
         return value;
-    }
-
-    public static void main() {
-        PseudonymGenerator generator = new PseudonymGenerator();
-        File configFile = new File("resources/config.properties");
-        try {
-            String pseudonym = generator.generateBase64EncodedPseudonym(configFile);
-            System.out.println("Generated Pseudonym: " + pseudonym);
-        } catch (Exception e) {
-            System.err.println("Error generating pseudonym: " + e.getMessage());
-        }
     }
 }
