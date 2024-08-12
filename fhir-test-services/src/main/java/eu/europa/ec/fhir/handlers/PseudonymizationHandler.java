@@ -1,24 +1,11 @@
 package eu.europa.ec.fhir.handlers;
 
-import com.gitb.ms.Void;
-import com.gitb.ms.*;
-import com.gitb.tr.TestResultType;
-import eu.europa.ec.fhir.handlers.FhirClient;
-import eu.europa.ec.fhir.state.ExpectedPost;
-import eu.europa.ec.fhir.state.StateManager;
-import eu.europa.ec.fhir.utils.Utils;
-import jakarta.annotation.Resource;
-import jakarta.xml.ws.WebServiceContext;
+import eu.europa.ec.fhir.pseudo.PseudonymGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Properties;
-import eu.europa.ec.fhir.pseudo.PseudonymGenerator;
 
 /**
  * Component to handle the pseudonymization of FHIR resources.
