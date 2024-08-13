@@ -59,7 +59,7 @@ public class ProcessingServiceImpl implements ProcessingService {
                 LOG.info(String.format("Pseudonymisation operation started for SSIN number: [%s].", ssin));
                 pseudominizedPatient =  new PseudonymizationHandler().pseudoGenerator(configFilePath, ssin);
             } else {
-                LOG.info("Pseudonymisation operation started for default SSIN number: \"84072536717\".");
+                LOG.info("Pseudonymisation operation started for default SSIN number from the configuration file");
                 pseudominizedPatient =  new PseudonymizationHandler().pseudoGenerator(configFilePath, ssin);
             }
 
