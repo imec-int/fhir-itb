@@ -21,7 +21,7 @@ A typical `config.properties` file **must** include the following properties, or
 - `certificate.dir`
 - `certificateFilePath`
 - `certificatePassword`
-- `identifier=`
+- `identifier`
 - `ehealth.from.header.value`
 - `ssin`
 

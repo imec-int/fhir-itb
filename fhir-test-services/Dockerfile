@@ -3,7 +3,6 @@ FROM maven:3.9.2-amazoncorretto-17 AS builder
 
 WORKDIR /app
 COPY . /app
-# Install the local dependency JAR into the Maven repository
 RUN mvn clean install -DskipTests=true
 
 
