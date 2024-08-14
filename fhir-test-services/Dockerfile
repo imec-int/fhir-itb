@@ -3,14 +3,6 @@ FROM maven:3.9.2-amazoncorretto-17 AS builder
 
 WORKDIR /app
 COPY . /app
-# Install the local dependency JAR into the Maven repository
-RUN mvn install:install-file \
-    -Dfile=lib/vas-integrations-pseudonymisation-0.8.4-SNAPSHOT-jar-with-dependencies.jar \
-    -DgroupId=be.smals.vas.integrations \
-    -DartifactId=vas-integrations-pseudonymisation \
-    -Dversion=0.8.4-SNAPSHOT \
-    -Dpackaging=jar
-
 RUN mvn clean install -DskipTests=true
 
 
