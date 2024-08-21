@@ -4,7 +4,7 @@
         Scriptlet used to create and submit an allergy to a FHIR server.
     -->
     <params>
-        <var name="patient" type="string"><value>Patient/example</value></var>
+        <var name="patient" type="string"></var>
         <var name="asserter" type="string"><value>Patient/example</value></var>
         <var name="recorder" type="string"><value>Practitioner/practitioner</value></var>
         <var name="codeCode" type="string"/>
@@ -23,6 +23,7 @@
             <input name="codeText">$codeText</input>
             <input name="reactionCode">$reactionCode</input>
             <input name="reactionDisplay">$reactionDisplay</input>
+            <input name="patient">$patient</input>
         </call>
         <!--
             Second we submit it to the FHIR server.
