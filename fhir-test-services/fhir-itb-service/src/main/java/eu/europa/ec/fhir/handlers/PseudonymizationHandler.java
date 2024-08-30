@@ -33,10 +33,10 @@ public class PseudonymizationHandler{
                LOG.info("configFilePath must be provided.");
            }
            return expectedPatient;
-       }}
-//
+       }
+
 //       public static void main(String[] args) {
 //           PseudonymizationHandler instance = new PseudonymizationHandler();
-//           instance.pseudoGenerator("resources/config.properties", "");
+//           instance.pseudoGenerator("resources/pseudo/config.properties", "");
 //       }
-//}
+}

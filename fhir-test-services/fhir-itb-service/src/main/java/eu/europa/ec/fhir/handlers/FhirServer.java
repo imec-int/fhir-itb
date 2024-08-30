@@ -1,5 +1,6 @@
 package eu.europa.ec.fhir.handlers;
 
+import eu.europa.ec.fhir.handlers.RequestResult;
 import eu.europa.ec.fhir.state.StateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

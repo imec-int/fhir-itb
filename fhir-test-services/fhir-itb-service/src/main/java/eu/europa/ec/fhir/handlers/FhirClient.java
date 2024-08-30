@@ -1,5 +1,6 @@
 package eu.europa.ec.fhir.handlers;
 
+import eu.europa.ec.fhir.handlers.RequestResult;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
