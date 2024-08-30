@@ -3,9 +3,9 @@
 This project implements the supporting test services for the FHIR conformance testing. Currently, this provides an 
 implementation of a GITB messaging and validation services.
 
-The pseudonymization service can be found in the `be.smals.vas.integration.helper` package. For more information, please refer to the project's README.
+The pseudonymization service can be found in the `be.smals.vas.integration.helper` package under `fhir-pseudo-service` module . For more information, please refer to the project's README.
 
-Within the application's packages under `eu.europa.ec.fhir`:
+Within the spring boot application's `fhir-pseudo-service`, its packages under `eu.europa.ec.fhir`:
 
 - The `gitb` package contains the implementation of the GITB messaging and validation services.
 - The `handlers` package implements the logic for various actions.
@@ -26,7 +26,7 @@ A typical `config.properties` file **must** include the following properties, or
 - `ssin`
 
 
-The service is implemented in Java, using the [Spring Boot framework](https://spring.io/projects/spring-boot).
+The service `fhir-itb-service` is implemented in Java, using the [Spring Boot framework](https://spring.io/projects/spring-boot).
 It is  built and packaged using [Apache Maven](https://maven.apache.org/), and also via Docker Compose.
 
 # Prerequisites
@@ -38,9 +38,9 @@ The following prerequisites are required:
 # Building and running
 
 1. Build using `mvn clean package`.
-2. Once built you can run the application in two ways:  
+2. Once built, enter the submodule fhir-itb-service by `cd fhir-itb-service` you can run the application in two ways:\
   a. With maven: `mvn spring-boot:run`.  
-  b. Standalone: `java -jar ./target/fhir-test-services.jar`.
+  b. Standalone: `java -jar ./target/fhir-itb-service.jar`.
 3. The services are available at:
   a. For the messaging service: http://localhost:8181/fhir/services/messaging?wsdl  
   b. For the validation service: http://localhost:8181/fhir/services/validation?wsdl

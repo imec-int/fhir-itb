@@ -1,7 +1,9 @@
 package eu.europa.ec.fhir;
 
+import eu.europa.ec.fhir.handlers.KarateHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import eu.europa.ec.fhir.handlers.KarateHandler;
 
 /**
  * Entry point to bootstrap the application.
@@ -15,7 +17,11 @@ public class Application {
      * @param args Runtime arguments (none expected).
      */
     public static void main(String[] args) {
+
+//        KarateHandler runner = new KarateHandler();
+//        runner.runKarateTests();
         SpringApplication.run(Application.class, args);
+
 
     }
 }

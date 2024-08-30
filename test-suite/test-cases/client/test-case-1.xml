@@ -61,7 +61,7 @@
             -->
 
             <process desc="pseudonymisation process for patient" output="patient" handler="$DOMAIN{processingServiceAddress}" operation="pseudonymisation">
-                <input name="configFilePath">"resources/config.properties"</input>
+                <input name="configFilePath">"resources/pseudo/config.properties"</input>
                 <input name="SSIN">""</input>
             </process>
 

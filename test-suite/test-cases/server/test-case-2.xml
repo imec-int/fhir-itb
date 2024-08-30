@@ -24,7 +24,7 @@
             </call>
         </group>
         <process desc="pseudonymisation process for patient" output="patient" handler="$DOMAIN{processingServiceAddress}" operation="pseudonymisation">
-            <input name="configFilePath">"resources/config.properties"</input>
+            <input name="configFilePath">"resources/pseudo/config.properties"</input>
             <input name="SSIN">"123456"</input>
         </process>
         <group title="Step 1" desc="Submit invalid allergy">
