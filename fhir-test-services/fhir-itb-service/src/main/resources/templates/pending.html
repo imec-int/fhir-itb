@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Pending actions</title>
+    <link rel="stylesheet"  th:href="@{/webjars/bootstrap/css/bootstrap.min.css}">
+</head>
+<body>
+    <div class="container pt-5">
+        <div class="card">
+            <div class="card-header fs-2">
+                Pending manual checks
+            </div>
+            <div class="card-body">
+                <div class="p-3 mb-2 bg-info-subtle text-emphasis-info rounded">
+                    Use the listed test session identifier to look up the test session in the Test Bed.
+                </div>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Test session</th>
+                        <th>Result</th>
+                    </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                    <tr th:if="${pendingChecks.isEmpty()}">
+                        <td colspan="2">No pending checks found.</td>
+                    </tr>
+                    <tr th:each="check: ${pendingChecks}">
+                        <form action="#" th:action="@{/web/resolve}" method="post">
+                            <td class="top">
+                                <input type="text" name="session" class="form-control" th:value="${check.testSessionId}" readonly="readonly"/>
+                            </td>
+                            <td class="align-middle">
+                                <div class="row">
+                                    <div class="col-sm-2">
+                                        <select name="result" class="form-select">
+                                            <option value="Approved">Approve</option>
+                                            <option value="Rejected">Reject</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-7 flex-grow-1">
+                                        <textarea class="form-control" name="comments" placeholder="Comments" style="height: 1px"></textarea>
+                                    </div>
+                                    <div class="col-sm">
+                                        <button class="btn btn-secondary" type="submit">Update</button>
+                                    </div>
+                                </div>
+                            </td>
+                        </form>
+                    </tr>
+                    </tbody>
+                </table>
+                <form action="#" th:action="@{/web/pending}" method="post">
+                    <button class="btn btn-secondary" type="submit">Refresh</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
