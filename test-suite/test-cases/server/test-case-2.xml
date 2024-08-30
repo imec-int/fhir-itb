@@ -23,6 +23,10 @@
                 <input name="serverApiRoot">$SYSTEM{serverApiRoot}</input>
             </call>
         </group>
+        <process desc="pseudonymisation process for patient" output="patient" handler="$DOMAIN{processingServiceAddress}" operation="pseudonymisation">
+            <input name="configFilePath">"resources/config.properties"</input>
+            <input name="SSIN">"123456"</input>
+        </process>
         <group title="Step 1" desc="Submit invalid allergy">
             <call path="scriptlets/createAllergy.xml" output="allergy">
                 <input name="resourceType">"AllergyIntoleranceXXX"</input>
@@ -31,6 +35,7 @@
                 <input name="codeText">"Allergic to peanut"</input>
                 <input name="reactionCode">"39579001"</input>
                 <input name="reactionDisplay">"Anaphylactic reaction"</input>
+                <input name="patient">$patient</input>
             </call>
             <call path="scriptlets/submitAllergy.xml" output="result">
                 <input name="content">$allergy{content}</input>

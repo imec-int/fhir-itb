@@ -16,7 +16,7 @@
             Notice here how certain input parameters are set with default values. These can be overriden by inputs but don't have to be provided.
         -->
         <var name="resourceType" type="string"><value>AllergyIntolerance</value></var>
-        <var name="patient" type="string"><value>Patient/example</value></var>
+        <var name="patient" type="string"></var>
         <var name="asserter" type="string"><value>Patient/example</value></var>
         <var name="recorder" type="string"><value>Practitioner/practitioner</value></var>
         <var name="codeCode" type="string"/>
