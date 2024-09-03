@@ -1,4 +1,6 @@
-@host = http://localhost:9002/fhir/server/api
+# @host = http://localhost:9002/fhir/server/api
+@host = http://fhirtestbed.ilabt.imec.be:9002/fhir/server/api
+
 
 ###
 GET {{host}}/metadata HTTP/1.1
