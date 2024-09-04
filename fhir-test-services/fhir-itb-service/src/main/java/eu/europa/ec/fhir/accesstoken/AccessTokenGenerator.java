@@ -23,10 +23,10 @@ public class AccessTokenGenerator {
     private static final String KEYSTORE_TYPE = "PKCS12"; // or "JKS"
     private static final String KEYSTORE_KEY_ALIAS = "authentication";
 
-    public static void main(String[] args) {
-        AccessTokenGenerator accessTokenGenerator = new AccessTokenGenerator();
-        String accessToken = accessTokenGenerator.generateAccessToken(new File("fhir-test-services/fhir-itb-service/src/main/resources/pseudo/config.properties"));
-    }
+//    public static void main(String[] args) {
+//        AccessTokenGenerator accessTokenGenerator = new AccessTokenGenerator();
+//        String accessToken = accessTokenGenerator.generateAccessToken(new File("resources/pseudo/config.properties"));
+//    }
 
     public String generateAccessToken(File configFilePath) {
         Config config = loadConfig(configFilePath);
