@@ -30,10 +30,11 @@ public class AccessTokenGenerator {
     }
 
     public String generateAccessToken(File configFilePath) {
+        Config config = loadConfig(configFilePath);
         try {
-            String jwt = createJWT(configFilePath);
+            String jwt = createJWT(config);
+            String accessToken = fetchAccessToken(config.accessTokenUrl, jwt);
             System.out.println("jwt = " + jwt);
-            String accessToken = fetchAccessToken("https://api-acpt.ehealth.fgov.be/auth/realms/M2M/protocol/openid-connect/token", jwt);
             System.out.println("accessToken = " + accessToken);
             return accessToken;
         } catch (Exception e) {
@@ -69,38 +70,18 @@ public class AccessTokenGenerator {
         return (String) responseMap.get("access_token");
     }
 
-    private String createJWT(File configFilePath) throws Exception {
-        String certificatePassword;
-        String clientId;
-        String certificateFilePath;
 
-        // Load properties from config file if provided
-        if (configFilePath != null && configFilePath.exists()) {
-            Properties config = new Properties();
-
-            try (FileInputStream input = new FileInputStream(configFilePath)) {
-                config.load(input);
-                // Get values from properties, error if any are missing
-                certificateFilePath = getRequiredProperty(config, "certificateFilePath");
-                certificatePassword = getRequiredProperty(config, "certificatePassword");
-                clientId = getRequiredProperty(config, "client.id");
-            } catch (IOException e) {
-                throw new RuntimeException("Error reading config file: " + e.getMessage(), e);
-            }
-        } else {
-            throw new IllegalArgumentException("Config file not found at specified location.");
-        }
-
+    private String createJWT(Config config) throws Exception {
         // Load the keystore
         KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
-        File certificateFile = new File(certificateFilePath);
+        File certificateFile = new File(config.certificateFilePath);
         try (InputStream keyStoreStream = new FileInputStream(certificateFile)) {
-            keyStore.load(keyStoreStream, certificatePassword.toCharArray());
+            keyStore.load(keyStoreStream, config.certificatePassword.toCharArray());
         }
 
-        PrivateKey privateKey = (PrivateKey) keyStore.getKey(KEYSTORE_KEY_ALIAS, certificatePassword.toCharArray());
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(KEYSTORE_KEY_ALIAS, config.certificatePassword.toCharArray());
 
-        return createJWT(privateKey, clientId);
+        return createJWT(privateKey, config.clientId);
     }
 
     private static String createJWT(PrivateKey privateKey, String subject) {
@@ -136,6 +117,22 @@ public class AccessTokenGenerator {
             throw new IllegalArgumentException("Missing required configuration property: " + property);
         }
         return value;
+    }
+
+    private record Config(String certificateFilePath, String certificatePassword, String clientId, String accessTokenUrl) {}
+
+    private Config loadConfig(File configFilePath) {
+        Properties properties = new Properties();
+        try (FileInputStream input = new FileInputStream(configFilePath)) {
+            properties.load(input);
+            String certificateFilePath = (getRequiredProperty(properties, "certificateFilePath"));
+            String certificatePassword = (getRequiredProperty(properties, "certificatePassword"));
+            String clientId = (getRequiredProperty(properties, "client.id"));
+            String accessTokenUrl = (getRequiredProperty(properties, "accesstoken.url"));
+            return new Config(certificateFilePath, certificatePassword, clientId, accessTokenUrl);
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading config file: " + e.getMessage(), e);
+        }
     }
 
 
