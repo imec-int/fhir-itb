@@ -37,6 +37,6 @@ public class PseudonymizationHandler{
 
 //       public static void main(String[] args) {
 //           PseudonymizationHandler instance = new PseudonymizationHandler();
-//           instance.pseudoGenerator("resources/pseudo/config.properties", "");
+//           instance.pseudoGenerator("resources/config.properties", "");
 //       }
 }
