@@ -15,7 +15,6 @@ import java.net.http.HttpResponse;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.cert.Certificate;
 import java.util.Map;
 import java.util.Properties;
 
