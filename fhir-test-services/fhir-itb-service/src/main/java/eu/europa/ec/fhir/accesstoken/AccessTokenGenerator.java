@@ -25,7 +25,7 @@ public class AccessTokenGenerator {
 
 //    public static void main(String[] args) {
 //        AccessTokenGenerator accessTokenGenerator = new AccessTokenGenerator();
-//        String accessToken = accessTokenGenerator.generateAccessToken(new File("resources/pseudo/config.properties"));
+//        String accessToken = accessTokenGenerator.generateAccessToken(new File("resources/config.properties"));
 //    }
 
     public String generateAccessToken(File configFilePath) {

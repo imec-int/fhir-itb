@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import eu.europa.ec.fhir.handlers.PseudonymizationHandler;
 import com.gitb.core.ValueEmbeddingEnumeration;
+import eu.europa.ec.fhir.accesstoken.AccessTokenGenerator;
+import java.io.File;
 
 /**
  * Implementation of the GITB messaging API to handle messaging calls.
@@ -65,6 +67,17 @@ public class ProcessingServiceImpl implements ProcessingService {
 
             // Produce the resulting report.
             response.getOutput().add(utils.createAnyContentSimple("result",pseudominizedPatient, ValueEmbeddingEnumeration.STRING));
+        }
+
+        if ("authentication".equals(operation)) {
+            // Get the expected inputs.
+            var configFilePath = utils.getRequiredString(processRequest.getInput(), "configFilePath");
+            LOG.info(String.format("Received config file path (from test case) for authentication: [%s].", configFilePath));
+            //call access token generator
+            String accessToken=  new AccessTokenGenerator().generateAccessToken(new File(configFilePath));
+            LOG.info(String.format("generated access token: [%s].", accessToken));
+            // Produce the resulting report.
+            response.getOutput().add(utils.createAnyContentSimple("result",accessToken, ValueEmbeddingEnumeration.STRING));
         }
 
         response.setReport(utils.createReport(TestResultType.SUCCESS));
