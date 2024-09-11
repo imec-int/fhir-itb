@@ -114,9 +114,9 @@
 
         <!-- Karate Dependencies -->
         <dependency>
-            <groupId>com.intuit.karate</groupId>
+            <groupId>io.karatelabs</groupId>
             <artifactId>karate-core</artifactId>
-            <version>1.4.1</version>
+            <version>1.5.0</version>
         </dependency>
 
         <!-- JWT and Access token -->
