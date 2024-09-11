@@ -9,7 +9,7 @@ public class KarateHandler {
 
     public static Map<String, Object> runKarateTests() {
         // Run the Karate tests and store results
-        Results results = Runner.path("resources/karate/scratch.feature") // Corrected path to use classpath // Corrected path using classpath
+        Results results = Runner.path("resources/karate") // Corrected path to use classpath // Corrected path using classpath
                 .parallel(5); // Run tests in parallel with 5 threads
 
         // Create a map to store the results
@@ -28,10 +28,10 @@ public class KarateHandler {
         return testResults;
     }
 
-//    public static void main(String[] args) {
-//        Map<String, Object> results = runKarateTests();
-//
-//        // Output the results
-//        System.out.println("Test results: " + results);
-//    }
+    public static void main(String[] args) {
+        Map<String, Object> results = runKarateTests();
+
+        // Output the results
+        System.out.println("Test results: " + results);
+    }
 }
