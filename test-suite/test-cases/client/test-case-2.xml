@@ -23,7 +23,7 @@
             check for any failures within the group's contained steps (e.g. in the "output" section later on).
         -->
            
-            <process desc="pseudonymisation process for patient" output="karateResults" handler="$DOMAIN{processingServiceAddress}" operation="karate">
+            <process desc="Karate Runner process" output="karateResults" handler="$DOMAIN{processingServiceAddress}" operation="karate">
                 <input name="configFilePath">"resources/karate"</input>
             </process>
       <log>"Detalied Test Result"</log>
