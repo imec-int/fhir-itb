@@ -10,9 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import eu.europa.ec.fhir.handlers.PseudonymizationHandler;
+import eu.europa.ec.fhir.handlers.KarateHandler;
 import com.gitb.core.ValueEmbeddingEnumeration;
 import eu.europa.ec.fhir.accesstoken.AccessTokenGenerator;
 import java.io.File;
+import java.util.Map;
 
 /**
  * Implementation of the GITB messaging API to handle messaging calls.
@@ -79,6 +81,20 @@ public class ProcessingServiceImpl implements ProcessingService {
             // Produce the resulting report.
             response.getOutput().add(utils.createAnyContentSimple("result",accessToken, ValueEmbeddingEnumeration.STRING));
         }
+
+        if ("karate".equals(operation)) {
+            // Get the expected inputs.
+            var configFilePath = utils.getRequiredString(processRequest.getInput(), "configFilePath");
+            LOG.info("Received config file path (from test case) for Karate Runner: [{}].", configFilePath);
+            //call access token generator
+            LOG.info("Calling Karate Runner");
+            Map<String,Object> karateResults= KarateHandler.runKarateTests(configFilePath);
+
+            // Produce the resulting report.
+            response.getOutput().add(utils.createAnyContentSimple("result", String.valueOf((boolean) karateResults.get("allPassed")), ValueEmbeddingEnumeration.STRING));
+            response.getOutput().add(utils.createAnyContentSimple("resultDetails",karateResults.toString(), ValueEmbeddingEnumeration.STRING));
+        }
+
 
         response.setReport(utils.createReport(TestResultType.SUCCESS));
         return response;
