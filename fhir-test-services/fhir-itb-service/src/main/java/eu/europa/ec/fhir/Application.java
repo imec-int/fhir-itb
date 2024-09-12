@@ -17,12 +17,7 @@ public class Application {
      * @param args Runtime arguments (none expected).
      */
     public static void main(String[] args) {
-
-//        KarateHandler runner = new KarateHandler();
-//        runner.runKarateTests();
         SpringApplication.run(Application.class, args);
-
-
     }
 }
 

@@ -32,6 +32,7 @@
 		the FHIR client and FHIR server roles. Alternatively these could of course be split into separate test suites but that is not necessary.
 	-->	
 	<testcase id="tc-client-001"/>
+	<testcase id="tc-karate-001"/>
 	<testcase id="tc-server-001"/>
 	<testcase id="tc-server-002"/>
 </testsuite>

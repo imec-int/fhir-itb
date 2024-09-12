@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "allPassed": {
+        "type": "boolean",
+        "enum": [true],
+        "description": "Must be true if all tests passed"
+      }
+    },
+    "patternProperties": {
+      "^(?!allPassed$).*": {
+        "type": "string",
+        "enum": ["passed"],
+        "description": "All fields except 'allPassed' must have the value 'passed'"
+      }
+    },
+    "required": ["allPassed"],
+    "additionalProperties": false
+  }
+  

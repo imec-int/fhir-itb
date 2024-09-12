@@ -35,8 +35,4 @@ public class PseudonymizationHandler{
            return expectedPatient;
        }
 
-//       public static void main(String[] args) {
-//           PseudonymizationHandler instance = new PseudonymizationHandler();
-//           instance.pseudoGenerator("resources/config.properties", "");
-//       }
 }

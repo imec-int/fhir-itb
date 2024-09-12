@@ -1,15 +1,21 @@
 package eu.europa.ec.fhir.handlers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intuit.karate.Results;
 import com.intuit.karate.Runner;
+import com.intuit.karate.core.ScenarioResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class KarateHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(KarateHandler.class);
 
-    public static Map<String, Object> runKarateTests() {
+    public static Map<String, Object> runKarateTests(String configFilePath) {
         // Run the Karate tests and store results
-        Results results = Runner.path("resources/karate") // Corrected path to use classpath // Corrected path using classpath
+        Results results = Runner.path(configFilePath)
                 .parallel(5); // Run tests in parallel with 5 threads
 
         // Create a map to store the results
@@ -22,16 +28,13 @@ public class KarateHandler {
         // Add the pass/fail status for each feature
         results.getScenarioResults().forEach(result -> {
             // Add each feature name and its pass status
-            testResults.put(result.getScenario().getFeature().getResource().toString(), result.isFailed() ? "failed" : "passed");
+            String featureName = result.getScenario().getFeature().getResource().getRelativePath();
+            testResults.put(featureName, result.isFailed() ? "failed" : "passed");
         });
 
+        LOG.info(String.format("Karate RUNNER Test results: [%s].", results));
         return testResults;
+
     }
 
-    public static void main(String[] args) {
-        Map<String, Object> results = runKarateTests();
-
-        // Output the results
-        System.out.println("Test results: " + results);
-    }
 }
