@@ -6,3 +6,4 @@ Feature: Karate Demo Test
     And method get
     Then status 200
     And match response[0].id == 1
+    
