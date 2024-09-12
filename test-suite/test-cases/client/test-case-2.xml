@@ -30,7 +30,7 @@
       <log>$karateResults{resultDetails}</log>
 
 
-       <verify id="checkKarateTest" desc="Verify if all Karate Test" handler="StringValidator">
+       <verify id="checkKarateTest" desc="Verify if all Karate Test passed" handler="StringValidator">
     <input name="actualstring">$karateResults{result}</input>
     <input name="expectedstring">"true"</input>
   </verify>
