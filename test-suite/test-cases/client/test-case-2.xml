@@ -1,6 +1,6 @@
 <testcase id="tc-karate-001" xmlns="http://www.gitb.com/tdl/v1/" xmlns:gitb="http://www.gitb.com/core/v1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <metadata>
-        <gitb:name>test case: karate Runner Demo</gitb:name>
+        <gitb:name>Test case 2: karate Runner Demo</gitb:name>
         <gitb:version>1.0</gitb:version>
         <gitb:description>The test calls the Karate runner to test agaist the features in the configured feature folder.</gitb:description>
         <!-- See here how we refer to a HTML block that will be added as documentation for the test case. -->
@@ -29,11 +29,10 @@
       <log>"Detalied Test Result"</log>
       <log>$karateResults{resultDetails}</log>
 
-
        <verify id="checkKarateTest" desc="Verify if all Karate Test passed" handler="StringValidator">
-    <input name="actualstring">$karateResults{result}</input>
-    <input name="expectedstring">"true"</input>
-  </verify>
+            <input name="actualstring">$karateResults{result}</input>
+            <input name="expectedstring">"true"</input>
+       </verify>
 
     </steps>
     <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
