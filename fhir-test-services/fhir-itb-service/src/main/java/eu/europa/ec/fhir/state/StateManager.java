@@ -172,7 +172,7 @@ public class StateManager {
             if (patient.isPresent()) {
                 body = utils.prettyPrintJson(body);
                 // Call embedded FHIR server.
-                RequestResult serverResult = fhirClient.callServer(HttpMethod.POST, constructUri(fhirServerEndpoint, pathExtension), body);
+                RequestResult serverResult = fhirClient.callServer(HttpMethod.POST, constructUri(fhirServerEndpoint, pathExtension), body,null,null);
                 result = Optional.of(serverResult);
                 // Check to see if any test sessions were expecting the call.
                 synchronized (lock) {

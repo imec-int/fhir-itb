@@ -1,0 +1,58 @@
+<testcase id="tc-client-003" xmlns="http://www.gitb.com/tdl/v1/" xmlns:gitb="http://www.gitb.com/core/v1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <metadata>
+        <gitb:name>Test case 3: Care plan search example</gitb:name>
+        <gitb:version>1.0</gitb:version>
+        <gitb:description>This test demostrate a care plan search example</gitb:description>
+        <!-- See here how we refer to a HTML block that will be added as documentation for the test case. -->
+        <gitb:documentation import="docs/client/test-case-1.html"/>
+    </metadata>
+    <actors>
+        <!--
+            The Actor IDs need to match those in the test suite and in the test engine. One of these needs to always be the SUT (System Under Test).
+        -->
+        <gitb:actor id="client" role="SUT"/>
+        <gitb:actor id="server"/>
+    </actors>
+    <!--
+        Setting "stopOnError" to true will stop the test session as soon as an error is encountered. By default test sessions will continue regardless of errors.
+    -->
+    <steps stopOnError="true">
+
+        <group title="Step1" desc="DEMO - Seach Plan">
+            <process desc="authentication services" output="accesstoken" handler="$DOMAIN{processingServiceAddress}" operation="authentication">
+                <input name="configFilePath">"resources/config.properties"</input>
+            </process>
+
+            <process desc="pseudonymisation process for patient" output="patient" handler="$DOMAIN{processingServiceAddress}" operation="pseudonymisation">
+                <input name="configFilePath">"resources/config.properties"</input>
+                <input name="SSIN">""</input>
+            </process>
+
+            <send id="carePlanSearch" desc="Care Plan Search" from="client" to="server" handler="$DOMAIN{messagingServiceAddress}">
+                <input name="endpoint">"https://apps-acpt.vitalink-services.be/vault/api/r4/CarePlan/_search"</input>
+                <input name="authorizationToken">$accesstoken</input>
+                <input name="patientIdentifier">$patient</input>
+                <input name="type">"post"</input>
+                <input name="payload">""</input>
+            </send>
+            <log>$carePlanSearch{response}</log>
+            <verify id="verifyStatus" desc="Verify the return status of the http call" handler="StringValidator">
+                <input name="actualstring">$carePlanSearch{response}{status}</input>
+                <input name="expectedstring">"200"</input>
+            </verify>
+        </group>
+    </steps>
+    <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
+    <output>
+        <success>
+            <default>"Test case completed successfully."</default>
+        </success>
+        <failure>
+            <case>
+                <cond>$STEP_STATUS{checkKarateTest} = 'ERROR'</cond>
+                <message>"The return status is not 200"</message>
+            </case>
+            <default>"Test case failed. Please check the failed step's report for more information and the test log."</default>
+        </failure>
+    </output>
+</testcase>

@@ -33,6 +33,7 @@
 	-->	
 	<testcase id="tc-client-001"/>
 	<testcase id="tc-karate-001"/>
+	<testcase id="tc-client-003"/>
 	<testcase id="tc-server-001"/>
 	<testcase id="tc-server-002"/>
 </testsuite>
