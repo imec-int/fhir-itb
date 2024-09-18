@@ -90,19 +90,21 @@ public class MessagingServiceImpl implements MessagingService {
         if ("post".equals(type)) {
             var endpoint = utils.getRequiredString(sendRequest.getInput(), "endpoint");
             var payload = utils.getRequiredString(sendRequest.getInput(), "payload");
-            var result = fhirClient.callServer(HttpMethod.POST, endpoint, payload);
+            var authorizationToken = utils.getRequiredString(sendRequest.getInput(), "authorizationToken");
+            var patientIdentifier = utils.getRequiredString(sendRequest.getInput(), "patientIdentifier");
+            var result = fhirClient.callServer(HttpMethod.POST, endpoint, payload, authorizationToken, patientIdentifier );
             var report = utils.createReport(TestResultType.SUCCESS);
             utils.addCommonReportData(report, endpoint, payload, result);
             response.setReport(report);
         } else if ("delete".equals(type)) {
             var endpoint = utils.getRequiredString(sendRequest.getInput(), "endpoint");
-            var result = fhirClient.callServer(HttpMethod.DELETE, endpoint, null);
+            var result = fhirClient.callServer(HttpMethod.DELETE, endpoint, null,null,null);
             var report = utils.createReport(TestResultType.SUCCESS);
             utils.addCommonReportData(report, endpoint, null, result);
             response.setReport(report);
         } else if ("get".equals(type)) {
             var endpoint = utils.getRequiredString(sendRequest.getInput(), "endpoint");
-            var result = fhirClient.callServer(HttpMethod.GET, endpoint, null);
+            var result = fhirClient.callServer(HttpMethod.GET, endpoint, null,null,null);
             var report = utils.createReport(TestResultType.SUCCESS);
             utils.addCommonReportData(report, endpoint, null, result);
             response.setReport(report);

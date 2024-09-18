@@ -78,7 +78,7 @@ public class ValidationServiceImpl implements ValidationService {
          * validation POST and retrieving the report. Alternatively this could be replaced by a call to the FHIR
          * validator as a Java library.
          */
-        RequestResult result = fhirClient.callServer(HttpMethod.POST, endpoint, payload);
+        RequestResult result = fhirClient.callServer(HttpMethod.POST, endpoint, payload,null,null);
         if (result.status() != HttpStatus.OK.value()) {
             // The validation call resulted in a failure.
             response.setReport(utils.createReport(TestResultType.FAILURE));
