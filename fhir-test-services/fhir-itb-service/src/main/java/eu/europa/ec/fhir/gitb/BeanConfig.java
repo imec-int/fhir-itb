@@ -1,9 +1,6 @@
 package eu.europa.ec.fhir.gitb;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.europa.ec.fhir.gitb.MessagingServiceImpl;
-import eu.europa.ec.fhir.gitb.ProcessingServiceImpl;
-import eu.europa.ec.fhir.gitb.ValidationServiceImpl;
 import org.apache.cxf.Bus;
 import org.apache.cxf.jaxws.EndpointImpl;
 import org.springframework.context.annotation.Bean;
