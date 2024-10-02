@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -79,7 +80,7 @@ public class FhirProxy {
         String uriString = String.format("%s/%s%s", fhirProxyEndpoint, path, queryString);
 
         try {
-            return new URI(uriString);
+            return new URL(uriString).toURI();
         } catch (Exception e) {
             LOGGER.error("Invalid Proxy URI \"{}\": {}", uriString, e.getMessage());
             throw new IllegalStateException("Invalid Proxy URI");
