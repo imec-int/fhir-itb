@@ -1,4 +1,4 @@
-package eu.europa.ec.fhir.handlers;
+package eu.europa.ec.fhir;
 
 import eu.europa.ec.fhir.utils.HttpUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -6,9 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,14 +15,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-/**
- * Proxies all requests as they come to the configured FHIR server and
- * runs automated tests against their responses.
- */
-@RestController
-public class FhirProxy {
+@Service
+public class FhirProxyService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FhirProxy.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FhirProxyService.class);
 
     @Value("${fhir.proxy.endpoint}")
     private String fhirProxyEndpoint;
@@ -52,17 +46,12 @@ public class FhirProxy {
         return requestBuilder.build();
     }
 
-    @RequestMapping(value = "/proxy/{path}")
-    public ResponseEntity<String> handleRequest(
-            HttpServletRequest request,
-            @PathVariable String path
-    ) throws IOException, InterruptedException {
+    public ResponseEntity<String> proxyRequest(HttpServletRequest request, String path) throws IOException, InterruptedException {
+        // Build the request
         var fhirRequest = buildFhirRequest(request, path);
 
         HttpClient client = HttpClient.newHttpClient();
         var response = client.send(fhirRequest, HttpResponse.BodyHandlers.ofString());
-
-        // TODO: trigger automated tests against the response
 
         // Return the response as-is
         return ResponseEntity.status(response.statusCode())
