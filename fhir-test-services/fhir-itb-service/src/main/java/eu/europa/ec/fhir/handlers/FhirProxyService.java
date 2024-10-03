@@ -1,4 +1,4 @@
-package eu.europa.ec.fhir;
+package eu.europa.ec.fhir.handlers;
 
 import eu.europa.ec.fhir.utils.HttpUtils;
 import jakarta.servlet.http.HttpServletRequest;
