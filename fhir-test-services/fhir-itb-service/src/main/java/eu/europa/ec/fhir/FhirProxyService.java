@@ -47,13 +47,11 @@ public class FhirProxyService {
     }
 
     public ResponseEntity<String> proxyRequest(HttpServletRequest request, String path) throws IOException, InterruptedException {
-        // Build the request
         var fhirRequest = buildFhirRequest(request, path);
 
         HttpClient client = HttpClient.newHttpClient();
         var response = client.send(fhirRequest, HttpResponse.BodyHandlers.ofString());
 
-        // Return the response as-is
         return ResponseEntity.status(response.statusCode())
                 // TODO: include response headers
                 .body(response.body());
