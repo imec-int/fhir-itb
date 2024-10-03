@@ -20,8 +20,14 @@ public class FhirProxyService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FhirProxyService.class);
 
+    private final HttpClient httpClient;
+
     @Value("${fhir.proxy.endpoint}")
     private String fhirProxyEndpoint;
+
+    public FhirProxyService(HttpClient httpClient) {
+        this.httpClient = httpClient;
+    }
 
     private URI buildFhirServerURI(HttpServletRequest request, String path) {
         String queryString = HttpUtils.getQueryString(request).orElse("");
@@ -49,8 +55,8 @@ public class FhirProxyService {
     public ResponseEntity<String> proxyRequest(HttpServletRequest request, String path) throws IOException, InterruptedException {
         var fhirRequest = buildFhirRequest(request, path);
 
-        HttpClient client = HttpClient.newHttpClient();
-        var response = client.send(fhirRequest, HttpResponse.BodyHandlers.ofString());
+        LOGGER.debug("Proxying request to FHIR server at: {}", fhirRequest.uri());
+        var response = httpClient.send(fhirRequest, HttpResponse.BodyHandlers.ofString());
 
         return ResponseEntity.status(response.statusCode())
                 // TODO: include response headers

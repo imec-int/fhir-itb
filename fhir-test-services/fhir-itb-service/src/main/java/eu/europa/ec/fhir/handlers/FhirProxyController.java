@@ -29,8 +29,6 @@ public class FhirProxyController {
             HttpServletRequest request,
             @PathVariable String path
     ) throws IOException, InterruptedException {
-        LOGGER.info("Proxying request to FHIR server: {}", path);
-
         var fhirResponse = fhirProxyService.proxyRequest(request, path);
 
         // TODO: trigger automated tests against the response
