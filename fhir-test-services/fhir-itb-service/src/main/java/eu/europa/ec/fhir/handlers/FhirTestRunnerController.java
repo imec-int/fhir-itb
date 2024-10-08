@@ -13,12 +13,12 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Proxies requests to the configured FHIR server while performing additional processing.
+ * Triggers test runs based on request parameters.
  */
 @RestController
-public class FhirProxyController {
+public class FhirTestRunnerController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FhirProxyController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FhirTestRunnerController.class);
 
     /**
      * A single system might have a different role in different specifications and
@@ -32,7 +32,7 @@ public class FhirProxyController {
     );
 
     /**
-     * Currently there is only one vendor, so we hardcode the pre-configured system ID.
+     * Currently there is only one vendor, so we hardcode the pre-configured System ID.
      * TODO: read from configuration
      */
     private Optional<String> resolveSystemId(String token) {
@@ -40,13 +40,13 @@ public class FhirProxyController {
     }
 
     /**
-     * Returns the Actor ID of the SUT based on the given endpoint.
+     * Returns the Actor ID of the FHIR Client based on the given endpoint.
      */
     private Optional<String> resolveActorId(String path) {
         return Optional.ofNullable(ACTOR_BY_PATH.get(path));
     }
 
-    @RequestMapping(value = "/proxy/{path}")
+    @RequestMapping(value = "/test/{path}")
     public ResponseEntity<String> handleRequest(
             @RequestBody String body,
             @RequestHeader("Authorization") String token,
