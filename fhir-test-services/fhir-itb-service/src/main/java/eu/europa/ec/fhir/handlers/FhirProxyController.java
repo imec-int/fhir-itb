@@ -18,8 +18,6 @@ import java.util.Optional;
 @RestController
 public class FhirProxyController {
 
-    private final String FhirClientVendorKey = "F3F3D983X081DX40D0XA2C1XC25D1CBA430C"
-
     private static final Logger LOGGER = LoggerFactory.getLogger(FhirProxyController.class);
 
     /**
