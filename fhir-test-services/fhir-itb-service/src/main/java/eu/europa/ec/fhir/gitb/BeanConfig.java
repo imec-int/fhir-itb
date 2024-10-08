@@ -29,7 +29,7 @@ public class BeanConfig {
     }
 
     /**
-     * The messaging service endpoint.
+     * The validation service endpoint.
      *
      * @return The endpoint.
      */
