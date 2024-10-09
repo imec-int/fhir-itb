@@ -1,0 +1,40 @@
+<testcase id="post-AllergyIntolerance" xmlns="http://www.gitb.com/tdl/v1/"
+          xmlns:gitb="http://www.gitb.com/core/v1/"
+>
+    <metadata>
+        <gitb:name>Test case 1: Submit allergy intolerances</gitb:name>
+        <gitb:version>1.0</gitb:version>
+        <gitb:description>The FHIR client submits a specific allergy
+            intolerance to a FHIR server.
+        </gitb:description>
+        <!-- See here how we refer to a HTML block that will be added as documentation for the test case. -->
+        <!--        <gitb:documentation import="docs/client/test-case-1.html"/>-->
+    </metadata>
+    <actors>
+        <!--
+            The Actor IDs need to match those in the test suite and in the test engine. One of these needs to always be the SUT (System Under Test).
+        -->
+        <gitb:actor id="client" role="SUT"/>
+        <gitb:actor id="server"/>
+    </actors>
+    <!--
+        Setting "stopOnError" to true will stop the test session as soon as an error is encountered. By default test sessions will continue regardless of errors.
+    -->
+    <steps stopOnError="true">
+        <!-- TODO: get data from the TestRunnerService -->
+        <interact desc="Decide outcome" id="requestData">
+            <request desc="Succeed?" name="choice"/>
+        </interact>
+        <exit desc="Finished" success="$requestData{choice}"/>
+    </steps>
+    <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
+    <output>
+        <success>
+            <default>"You decided to pass the test case."</default>
+        </success>
+        <failure>
+            <!-- If no specific case is matched print a default message. -->
+            <default>"You decided to fail the test case."</default>
+        </failure>
+    </output>
+</testcase>
