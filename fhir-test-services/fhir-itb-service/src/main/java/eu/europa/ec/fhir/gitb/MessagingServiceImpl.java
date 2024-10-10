@@ -23,13 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Arrays;
 
 
 /**
@@ -94,28 +92,6 @@ public class MessagingServiceImpl implements MessagingService {
         return new InitiateResponse();
     }
 
-    record SendInput(HttpMethod method, String endpoint, String payload,
-                     String token,
-                     String patientIdentifier) {
-
-        static SendInput fromRequest(SendRequest request) throws IllegalArgumentException {
-            var input = request.getInput();
-            var type = ITBUtils.getRequiredString(input, "type");
-            var method = HttpMethod.valueOf(type.toUpperCase());
-            if (Arrays.stream(HttpMethod.values())
-                    .noneMatch(m -> m.equals(method))) {
-                throw new IllegalArgumentException("Unsupported type [%s] for 'send' operation.".formatted(method.toString()));
-            }
-
-            var endpoint = ITBUtils.getRequiredString(input, "endpoint");
-            var payload = ITBUtils.getRequiredString(input, "payload");
-            var authorizationToken = ITBUtils.getRequiredString(input, "authorizationToken");
-            var patientIdentifier = ITBUtils.getRequiredString(input, "patientIdentifier");
-
-            return new SendInput(method, endpoint, payload, authorizationToken, patientIdentifier);
-        }
-    }
-
     /**
      * Called when a "send" step is executed.
      * <p/>
@@ -130,14 +106,14 @@ public class MessagingServiceImpl implements MessagingService {
         SendResponse response = new SendResponse();
 
         var input = SendInput.fromRequest(sendRequest);
-        var uri = URI.create(input.endpoint);
+        var uri = URI.create(input.endpoint());
 
-        RequestResult result = fhirClient.callServer(input.method, uri, input.payload, input.token, input.patientIdentifier);
+        RequestResult result = fhirClient.callServer(input.method(), uri, input.payload(), input.token(), input.patientIdentifier());
         var report = ITBUtils.createReport(TestResultType.SUCCESS);
-        ITBUtils.addCommonReportData(report, input.endpoint, input.payload, result);
+        ITBUtils.addCommonReportData(report, input.endpoint(), input.payload(), result);
         response.setReport(report);
 
-        var key = String.format("%s%s", input.method.toString()
+        var key = String.format("%s%s", input.method().toString()
                 .toLowerCase(), uri.getPath().replace("/", "-"));
 
         deferredRequestMapper.getDeferredRequest(key)
