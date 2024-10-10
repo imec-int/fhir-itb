@@ -47,8 +47,7 @@ public class FhirProxyService {
                 .method(HttpMethod.valueOf(request.getMethod()))
                 .uri(buildURI(request, fhirProxyEndpoint, path))
                 .headers((headers) -> {
-                    HttpUtils.extractHeaders(request)
-                            .forEach((header, values) -> values.forEach(value -> headers.add(header, value)));
+                    HttpUtils.copyHeaders(request, headers);
                 });
 
 

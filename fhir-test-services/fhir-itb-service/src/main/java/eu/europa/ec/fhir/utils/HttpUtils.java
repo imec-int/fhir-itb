@@ -21,16 +21,16 @@ public final class HttpUtils {
                 .anyMatch(headerName::startsWith);
     }
 
-    public static HttpHeaders extractHeaders(HttpServletRequest request) {
-        return Collections.list(request.getHeaderNames()).stream()
-                .collect(HttpHeaders::new, (httpHeaders, headerName) -> {
-                    Collections.list(request.getHeaders(headerName))
+    public static void copyHeaders(HttpServletRequest fromRequest, HttpHeaders intoHeaders) {
+        Collections.list(fromRequest.getHeaderNames())
+                .forEach((headerName) -> {
+                    Collections.list(fromRequest.getHeaders(headerName))
                             .forEach(value -> {
                                 if (!isRestrictedHeader(headerName)) {
-                                    httpHeaders.add(headerName, value);
+                                    intoHeaders.add(headerName, value);
                                 }
                             });
-                }, HttpHeaders::putAll);
+                });
     }
 
     public static HttpRequest.BodyPublisher getBodyPublisher(HttpServletRequest request) {

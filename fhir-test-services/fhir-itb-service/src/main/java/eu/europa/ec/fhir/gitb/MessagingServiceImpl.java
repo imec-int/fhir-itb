@@ -1,19 +1,35 @@
 package eu.europa.ec.fhir.gitb;
 
+import com.gitb.ms.BasicRequest;
+import com.gitb.ms.BeginTransactionRequest;
+import com.gitb.ms.FinalizeRequest;
+import com.gitb.ms.GetModuleDefinitionResponse;
+import com.gitb.ms.InitiateRequest;
+import com.gitb.ms.InitiateResponse;
+import com.gitb.ms.MessagingService;
+import com.gitb.ms.ReceiveRequest;
+import com.gitb.ms.SendRequest;
+import com.gitb.ms.SendResponse;
 import com.gitb.ms.Void;
-import com.gitb.ms.*;
 import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.handlers.FhirClient;
+import eu.europa.ec.fhir.handlers.RequestResult;
 import eu.europa.ec.fhir.state.ExpectedPost;
 import eu.europa.ec.fhir.state.StateManager;
-import eu.europa.ec.fhir.utils.Utils;
+import eu.europa.ec.fhir.utils.ITBUtils;
 import jakarta.annotation.Resource;
 import jakarta.xml.ws.WebServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+
+import java.net.URI;
+import java.util.Arrays;
 
 
 /**
@@ -22,8 +38,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class MessagingServiceImpl implements MessagingService {
 
-    /** Logger. */
-    private static final Logger LOG = LoggerFactory.getLogger(MessagingServiceImpl.class);
+    /**
+     * Logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessagingServiceImpl.class);
 
     @Resource
     private WebServiceContext wsContext;
@@ -31,9 +49,12 @@ public class MessagingServiceImpl implements MessagingService {
     private StateManager stateManager;
     @Autowired
     private FhirClient fhirClient;
-    @Autowired
-    private Utils utils;
 
+    private final DeferredRequestMapper deferredRequestMapper;
+
+    public MessagingServiceImpl(DeferredRequestMapper deferredRequestMapper) {
+        this.deferredRequestMapper = deferredRequestMapper;
+    }
 
     /**
      * This method normally returns documentation on how the service is expected to be used. It is meaningful
@@ -66,10 +87,33 @@ public class MessagingServiceImpl implements MessagingService {
          * The session identifier is extracted here from the SOAP headers. In subsequent calls to other operations,
          * this identifier will be directly included in the calls' parameters.
          */
-        var sessionId = utils.getTestSessionIdFromHeaders(wsContext).orElseThrow();
-        LOG.info("Initiating new test session [{}].", sessionId);
+        var sessionId = ITBUtils.getTestSessionIdFromHeaders(wsContext)
+                .orElseThrow();
+        LOGGER.info("Initiating new test session [{}].", sessionId);
         stateManager.recordSession(sessionId);
         return new InitiateResponse();
+    }
+
+    record SendInput(HttpMethod method, String endpoint, String payload,
+                     String token,
+                     String patientIdentifier) {
+
+        static SendInput fromRequest(SendRequest request) throws IllegalArgumentException {
+            var input = request.getInput();
+            var type = ITBUtils.getRequiredString(input, "type");
+            var method = HttpMethod.valueOf(type.toUpperCase());
+            if (Arrays.stream(HttpMethod.values())
+                    .noneMatch(m -> m.equals(method))) {
+                throw new IllegalArgumentException("Unsupported type [%s] for 'send' operation.".formatted(method.toString()));
+            }
+
+            var endpoint = ITBUtils.getRequiredString(input, "endpoint");
+            var payload = ITBUtils.getRequiredString(input, "payload");
+            var authorizationToken = ITBUtils.getRequiredString(input, "authorizationToken");
+            var patientIdentifier = ITBUtils.getRequiredString(input, "patientIdentifier");
+
+            return new SendInput(method, endpoint, payload, authorizationToken, patientIdentifier);
+        }
     }
 
     /**
@@ -82,35 +126,31 @@ public class MessagingServiceImpl implements MessagingService {
      */
     @Override
     public SendResponse send(SendRequest sendRequest) {
-        // We can access the test session ID from the request's parameters.
-        LOG.info("Called 'send' from test session [{}].", sendRequest.getSessionId());
+        LOGGER.info("Called 'send' from test session [{}].", sendRequest.getSessionId());
         SendResponse response = new SendResponse();
-        response.setReport(utils.createReport(TestResultType.SUCCESS));
-        var type = utils.getRequiredString(sendRequest.getInput(), "type");
-        if ("post".equals(type)) {
-            var endpoint = utils.getRequiredString(sendRequest.getInput(), "endpoint");
-            var payload = utils.getRequiredString(sendRequest.getInput(), "payload");
-            var authorizationToken = utils.getRequiredString(sendRequest.getInput(), "authorizationToken");
-            var patientIdentifier = utils.getRequiredString(sendRequest.getInput(), "patientIdentifier");
-            var result = fhirClient.callServer(HttpMethod.POST, endpoint, payload, authorizationToken, patientIdentifier );
-            var report = utils.createReport(TestResultType.SUCCESS);
-            utils.addCommonReportData(report, endpoint, payload, result);
-            response.setReport(report);
-        } else if ("delete".equals(type)) {
-            var endpoint = utils.getRequiredString(sendRequest.getInput(), "endpoint");
-            var result = fhirClient.callServer(HttpMethod.DELETE, endpoint, null,null,null);
-            var report = utils.createReport(TestResultType.SUCCESS);
-            utils.addCommonReportData(report, endpoint, null, result);
-            response.setReport(report);
-        } else if ("get".equals(type)) {
-            var endpoint = utils.getRequiredString(sendRequest.getInput(), "endpoint");
-            var result = fhirClient.callServer(HttpMethod.GET, endpoint, null,null,null);
-            var report = utils.createReport(TestResultType.SUCCESS);
-            utils.addCommonReportData(report, endpoint, null, result);
-            response.setReport(report);
-        } else {
-            throw new IllegalArgumentException("Unsupported type [%s] for 'send' operation.".formatted(type));
-        }
+
+        var input = SendInput.fromRequest(sendRequest);
+        var uri = URI.create(input.endpoint);
+
+        RequestResult result = fhirClient.callServer(input.method, uri, input.payload, input.token, input.patientIdentifier);
+        var report = ITBUtils.createReport(TestResultType.SUCCESS);
+        ITBUtils.addCommonReportData(report, input.endpoint, input.payload, result);
+        response.setReport(report);
+
+        var key = String.format("%s%s", input.method.toString()
+                .toLowerCase(), uri.getPath().replace("/", "-"));
+
+        deferredRequestMapper.getDeferredRequest(key)
+                .ifPresent(deferredRequest -> {
+                    LOGGER.info("Found deferred request for key [{}]", key);
+                    HttpHeaders headers = new HttpHeaders();
+                    result.headers().map().forEach((headerName, values) -> {
+                        for (String value : values) {
+                            headers.add(headerName, value);
+                        }
+                    });
+                    deferredRequest.setResult(new ResponseEntity<>(result.body(), headers, HttpStatusCode.valueOf(result.status())));
+                });
 
         return response;
     }
@@ -129,19 +169,20 @@ public class MessagingServiceImpl implements MessagingService {
      */
     @Override
     public Void receive(ReceiveRequest receiveRequest) {
-        LOG.info("Called 'receive' from test session [{}].", receiveRequest.getSessionId());
-        var type = utils.getRequiredString(receiveRequest.getInput(), "type");
-        
+        LOGGER.info("Called 'receive' from test session [{}].", receiveRequest.getSessionId());
+        var type = ITBUtils.getRequiredString(receiveRequest.getInput(), "type");
+
 
         if ("postToValidate".equals(type)) {
-            var expectedPatient = utils.getRequiredString(receiveRequest.getInput(), "patient");
-            LOG.info(String.format("Received patient info (from test case): [{%s}]: ",expectedPatient));
+            var expectedPatient = ITBUtils.getRequiredString(receiveRequest.getInput(), "patient");
+            LOGGER.info(String.format("Received patient info (from test case): [{%s}]: ", expectedPatient));
             stateManager.recordExpectedPost(new ExpectedPost(
                     receiveRequest.getSessionId(),
                     // The call ID distinguishes the specific "receive" step that triggered this. This is useful if we have "parallel" receive steps to distinguish between them.
                     receiveRequest.getCallId(),
                     // The callback address extracted here will be used later on to notify the Test Bed.
-                    utils.getReplyToAddressFromHeaders(wsContext).orElseThrow(),
+                    ITBUtils.getReplyToAddressFromHeaders(wsContext)
+                            .orElseThrow(),
                     expectedPatient
             ));
         } else {
@@ -187,7 +228,7 @@ public class MessagingServiceImpl implements MessagingService {
      */
     @Override
     public Void finalize(FinalizeRequest finalizeRequest) {
-        LOG.info("Finalising test session [{}].", finalizeRequest.getSessionId());
+        LOGGER.info("Finalising test session [{}].", finalizeRequest.getSessionId());
         stateManager.destroySession(finalizeRequest.getSessionId());
         return new Void();
     }

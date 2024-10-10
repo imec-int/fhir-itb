@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 
 /**
  * Triggers test runs based on request parameters.
@@ -31,7 +32,7 @@ public class FhirProxyController {
     }
 
     @RequestMapping(value = "/proxy/{*path}")
-    public ResponseEntity<?> handleRequest(
+    public DeferredResult<ResponseEntity<?>> handleRequest(
             HttpServletRequest request,
             @PathVariable("path") String path,
             @RequestHeader(value = "Authorization", required = false) String token,
@@ -65,23 +66,16 @@ public class FhirProxyController {
                 }
         );
 
+        var result = new DeferredResult<ResponseEntity<?>>();
         try {
             var itbResponse = itbRestClient.startSession(startSessionPayload);
-            // TODO: extract session ID from itbResponse
-            // TODO: store session ID in a map, linked to the testId
             LOGGER.info("Test session(s) {} created!", (Object[]) itbResponse.createdSessions());
         } catch (Exception e) {
             LOGGER.warn("Failed to start test session(s): {}", e.getMessage());
-            return fhirProxyService.proxyRequest(request, path, body);
+            result.setResult(fhirProxyService.proxyRequest(request, path, body));
         }
 
-
-        // TODO: Use a DeferredResult to wait for the TestCase to trigger the request.
-        //  Store the DeferredResult in a HashMap, linked to the test session and request input.
-        //  We can use (some of) {sessionId, payload, method, path, and token} as key.
-        //  Once the request is actually performed, retrieve the DeferredResult from the HashMap,
-        //  and set its value to the response from the request.
-
-        return ResponseEntity.noContent().build();
+        // deferred now to be resolved when the test performs the request
+        return result;
     }
 }

@@ -1,7 +1,5 @@
 package eu.europa.ec.fhir.handlers;
 
-import eu.europa.ec.fhir.gitb.MessagingServiceImpl;
-import eu.europa.ec.fhir.handlers.RequestResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,19 +24,22 @@ public class FhirClient {
     private String fhirContentType;
 
     private static final String PATIENT_IDENTIFIER_PREFIX = "https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin|urn:be:fgov:ehealth:pseudo:v1:";
-    /** Logger. */
+    /**
+     * Logger.
+     */
     private static final Logger LOG = LoggerFactory.getLogger(FhirClient.class);
+
     /**
      * Call the FHIR server at the specific URI and return the response.
      *
-     * @param method The HTTP method to use.
-     * @param uri The full URI to use.
-     * @param payload The body payload as a string (optional).
+     * @param method             The HTTP method to use.
+     * @param uri                The full URI to use.
+     * @param payload            The body payload as a string (optional).
      * @param authorizationToken The authorization token to use for the request (optional).
-     * @param patientIdentifier The patient identifier (to be appended to the fixed prefix, optional).
+     * @param patientIdentifier  The patient identifier (to be appended to the fixed prefix, optional).
      * @return The result of the call.
      */
-    public RequestResult callServer(HttpMethod method, String uri, String payload, String authorizationToken, String patientIdentifier) {
+    public RequestResult callServer(HttpMethod method, URI uri, String payload, String authorizationToken, String patientIdentifier) {
         // Construct payload based on the presence of patientIdentifier
         if (patientIdentifier != null && !patientIdentifier.isEmpty()) {
             String fullPatientIdentifier = PATIENT_IDENTIFIER_PREFIX + patientIdentifier;
@@ -50,9 +51,8 @@ public class FhirClient {
         }
 
 
-
         var builder = HttpRequest.newBuilder()
-                .uri(URI.create(uri))
+                .uri(uri)
                 .method(method.name(), HttpRequest.BodyPublishers.ofString(payload));
 
         // Add necessary headers
@@ -74,11 +74,10 @@ public class FhirClient {
             var response = HttpClient.newBuilder()
                     .build()
                     .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-            LOG.info(response.body()+response.headers());
+            LOG.info("{}{}", response.body(), response.headers());
             return new RequestResult(response.statusCode(), response.body(), response.headers());
         } catch (IOException | InterruptedException e) {
             throw new IllegalStateException(String.format("Error while calling endpoint [%s]", uri), e);
         }
     }
 }
-

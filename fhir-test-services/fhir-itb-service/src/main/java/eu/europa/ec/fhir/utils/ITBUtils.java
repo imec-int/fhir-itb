@@ -13,7 +13,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.headers.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -29,23 +28,27 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
  * Component containing utility methods.
  */
 @Component
-public class Utils {
+public class ITBUtils {
 
     public static final QName REPLY_TO_QNAME = new QName("http://www.w3.org/2005/08/addressing", "ReplyTo");
     public static final QName TEST_SESSION_ID_QNAME = new QName("http://www.gitb.com", "TestSessionIdentifier", "gitb");
-    private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ITBUtils.class);
 
     @Value("${fhir.contentTypeBase}")
-    private String fhirContentType;
-    @Autowired
-    private ObjectMapper objectMapper;
+    private static String fhirContentType;
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Create a report for the given result.
@@ -55,7 +58,7 @@ public class Utils {
      * @param result The overall result of the report.
      * @return The report.
      */
-    public TAR createReport(TestResultType result) {
+    public static TAR createReport(TestResultType result) {
         TAR report = new TAR();
         report.setContext(new AnyContent());
         report.getContext().setType("map");
@@ -65,7 +68,8 @@ public class Utils {
         report.getCounters().setNrOfWarnings(BigInteger.ZERO);
         report.getCounters().setNrOfAssertions(BigInteger.ZERO);
         try {
-            report.setDate(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+            report.setDate(DatatypeFactory.newInstance()
+                    .newXMLGregorianCalendar(new GregorianCalendar()));
         } catch (DatatypeConfigurationException e) {
             throw new IllegalStateException(e);
         }
@@ -76,13 +80,13 @@ public class Utils {
      * Collect the inputs that match the provided name.
      *
      * @param parameterItems The items to look through.
-     * @param inputName The name of the input to look for.
+     * @param inputName      The name of the input to look for.
      * @return The collected inputs (not null).
      */
-    public List<AnyContent> getInputsForName(List<AnyContent> parameterItems, String inputName) {
+    public static List<AnyContent> getInputsForName(List<AnyContent> parameterItems, String inputName) {
         List<AnyContent> inputs = new ArrayList<>();
         if (parameterItems != null) {
-            for (AnyContent anInput: parameterItems) {
+            for (AnyContent anInput : parameterItems) {
                 if (inputName.equals(anInput.getName())) {
                     inputs.add(anInput);
                 }
@@ -95,10 +99,10 @@ public class Utils {
      * Get a single required input for the provided name.
      *
      * @param parameterItems The items to look through.
-     * @param inputName The name of the input to look for.
+     * @param inputName      The name of the input to look for.
      * @return The input.
      */
-    public AnyContent getSingleRequiredInputForName(List<AnyContent> parameterItems, String inputName) {
+    public static AnyContent getSingleRequiredInputForName(List<AnyContent> parameterItems, String inputName) {
         var inputs = getInputsForName(parameterItems, inputName);
         if (inputs.isEmpty()) {
             throw new IllegalArgumentException(String.format("No input named [%s] was found.", inputName));
@@ -112,10 +116,10 @@ public class Utils {
      * Get a single optional input for the provided name.
      *
      * @param parameterItems The items to look through.
-     * @param inputName The name of the input to look for.
+     * @param inputName      The name of the input to look for.
      * @return The input.
      */
-    public Optional<AnyContent> getSingleOptionalInputForName(List<AnyContent> parameterItems, String inputName) {
+    public static Optional<AnyContent> getSingleOptionalInputForName(List<AnyContent> parameterItems, String inputName) {
         var inputs = getInputsForName(parameterItems, inputName);
         if (inputs.isEmpty()) {
             return Optional.empty();
@@ -132,7 +136,7 @@ public class Utils {
      * @param content The content to convert.
      * @return The string value.
      */
-    public String asString(AnyContent content) {
+    public static String asString(AnyContent content) {
         if (content == null || content.getValue() == null) {
             return null;
         } else if (content.getEmbeddingMethod() == ValueEmbeddingEnumeration.BASE_64) {
@@ -163,10 +167,10 @@ public class Utils {
      * Get a single required input for the provided name as a string value.
      *
      * @param parameterItems The items to look through.
-     * @param inputName The name of the input to look for.
+     * @param inputName      The name of the input to look for.
      * @return The input's string value.
      */
-    public String getRequiredString(List<AnyContent> parameterItems, String inputName) {
+    public static String getRequiredString(List<AnyContent> parameterItems, String inputName) {
         return asString(getSingleRequiredInputForName(parameterItems, inputName));
     }
 
@@ -174,10 +178,10 @@ public class Utils {
      * Get a single required input for the provided name as a binary value.
      *
      * @param parameterItems The items to look through.
-     * @param inputName The name of the input to look for.
+     * @param inputName      The name of the input to look for.
      * @return The input's byte[] value.
      */
-    public byte[] getRequiredBinary(List<AnyContent> parameterItems, String inputName) {
+    public static byte[] getRequiredBinary(List<AnyContent> parameterItems, String inputName) {
         var input = getSingleRequiredInputForName(parameterItems, inputName);
         if (input.getEmbeddingMethod() == null || input.getEmbeddingMethod() == ValueEmbeddingEnumeration.BASE_64) {
             // Base64 encoded string.
@@ -206,36 +210,36 @@ public class Utils {
      * Get a single optional input for the provided name as a string value.
      *
      * @param parameterItems The items to look through.
-     * @param inputName The name of the input to look for.
+     * @param inputName      The name of the input to look for.
      * @return The input's string value.
      */
-    public Optional<String> getOptionalString(List<AnyContent> parameterItems, String inputName) {
+    public static Optional<String> getOptionalString(List<AnyContent> parameterItems, String inputName) {
         var input = getSingleOptionalInputForName(parameterItems, inputName);
-        return input.map(Utils.this::asString);
+        return input.map(ITBUtils::asString);
     }
 
     /**
      * Create a AnyContent object value based on the provided parameters.
      *
-     * @param name The name of the value.
-     * @param value The value itself.
+     * @param name            The name of the value.
+     * @param value           The value itself.
      * @param embeddingMethod The way in which this value is to be considered.
      * @return The value.
      */
-    public AnyContent createAnyContentSimple(String name, String value, ValueEmbeddingEnumeration embeddingMethod) {
+    public static AnyContent createAnyContentSimple(String name, String value, ValueEmbeddingEnumeration embeddingMethod) {
         return createAnyContentSimple(name, value, embeddingMethod, null);
     }
 
     /**
      * Create a AnyContent object value based on the provided parameters.
      *
-     * @param name The name of the value.
-     * @param value The value itself.
+     * @param name            The name of the value.
+     * @param value           The value itself.
      * @param embeddingMethod The way in which this value is to be considered.
-     * @param mimeType The mime type of the content.
+     * @param mimeType        The mime type of the content.
      * @return The value.
      */
-    public AnyContent createAnyContentSimple(String name, String value, ValueEmbeddingEnumeration embeddingMethod, String mimeType) {
+    public static AnyContent createAnyContentSimple(String name, String value, ValueEmbeddingEnumeration embeddingMethod, String mimeType) {
         AnyContent input = new AnyContent();
         input.setName(name);
         input.setValue(value);
@@ -251,7 +255,7 @@ public class Utils {
      * @param context The call's context.
      * @return The header's value.
      */
-    public Optional<String> getReplyToAddressFromHeaders(WebServiceContext context) {
+    public static Optional<String> getReplyToAddressFromHeaders(WebServiceContext context) {
         return getHeaderAsString(context, REPLY_TO_QNAME).map(h -> StringUtils.appendIfMissing(h, "?wsdl"));
     }
 
@@ -261,20 +265,21 @@ public class Utils {
      * @param context The call's context.
      * @return The header's value.
      */
-    public Optional<String> getTestSessionIdFromHeaders(WebServiceContext context) {
+    public static Optional<String> getTestSessionIdFromHeaders(WebServiceContext context) {
         return getHeaderAsString(context, TEST_SESSION_ID_QNAME);
     }
 
     /**
      * Extract a value from the SOAP headers.
      *
-     * @param name The name of the header to locate.
+     * @param name           The name of the header to locate.
      * @param valueExtractor The function used to extract the data.
+     * @param <T>            The type of data extracted.
      * @return The extracted data.
-     * @param <T> The type of data extracted.
      */
-    private <T> T getHeaderValue(WebServiceContext context, QName name, Function<Header, T> valueExtractor) {
-        return ((List<Header>) context.getMessageContext().get(Header.HEADER_LIST))
+    private static <T> T getHeaderValue(WebServiceContext context, QName name, Function<Header, T> valueExtractor) {
+        return ((List<Header>) context.getMessageContext()
+                .get(Header.HEADER_LIST))
                 .stream()
                 .filter(header -> name.equals(header.getName())).findFirst()
                 .map(valueExtractor).orElse(null);
@@ -286,42 +291,49 @@ public class Utils {
      * @param name The name of the header element to lookup.
      * @return The text value of the element.
      */
-    private Optional<String> getHeaderAsString(WebServiceContext context, QName name) {
-        return Optional.ofNullable(getHeaderValue(context, name, (header) -> ((Element) header.getObject()).getTextContent().trim()));
+    private static Optional<String> getHeaderAsString(WebServiceContext context, QName name) {
+        return Optional.ofNullable(getHeaderValue(context, name, (header) -> ((Element) header.getObject()).getTextContent()
+                .trim()));
     }
 
     /**
      * Add common request/response content to the given report as context items to return.
      *
-     * @param report The report to add the items to.
+     * @param report   The report to add the items to.
      * @param endpoint The called FHIR server endpoint.
-     * @param payload The payload sent.
-     * @param result The call result.
+     * @param payload  The payload sent.
+     * @param result   The call result.
      */
-    public void addCommonReportData(TAR report, String endpoint, String payload, RequestResult result) {
+    public static void addCommonReportData(TAR report, String endpoint, String payload, RequestResult result) {
         if (endpoint != null || payload != null) {
             var requestItem = new AnyContent();
             requestItem.setType("map");
             requestItem.setName("request");
             if (endpoint != null) {
-                requestItem.getItem().add(createAnyContentSimple("endpoint", endpoint, ValueEmbeddingEnumeration.STRING));
+                requestItem.getItem()
+                        .add(createAnyContentSimple("endpoint", endpoint, ValueEmbeddingEnumeration.STRING));
             }
             if (payload != null) {
-                requestItem.getItem().add(createAnyContentSimple("payload", payload, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
+                requestItem.getItem()
+                        .add(createAnyContentSimple("payload", payload, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
             }
             report.getContext().getItem().add(requestItem);
         }
         var responseItem = new AnyContent();
         responseItem.setType("map");
         responseItem.setName("response");
-        responseItem.getItem().add(createAnyContentSimple("status", String.valueOf(result.status()), ValueEmbeddingEnumeration.STRING));
+        responseItem.getItem()
+                .add(createAnyContentSimple("status", String.valueOf(result.status()), ValueEmbeddingEnumeration.STRING));
         if (result.body() != null && !result.body().isBlank()) {
             String contentType = null;
             var contentTypeHeader = result.contentType();
-            if (contentTypeHeader.isPresent() && contentTypeHeader.get().toLowerCase().startsWith(fhirContentType)) {
+            if (contentTypeHeader.isPresent() && contentTypeHeader.get()
+                    .toLowerCase()
+                    .startsWith(fhirContentType)) {
                 contentType = MediaType.APPLICATION_JSON_VALUE;
             }
-            responseItem.getItem().add(createAnyContentSimple("payload", result.body(), ValueEmbeddingEnumeration.STRING, contentType));
+            responseItem.getItem()
+                    .add(createAnyContentSimple("payload", result.body(), ValueEmbeddingEnumeration.STRING, contentType));
         }
         report.getContext().getItem().add(responseItem);
     }
@@ -332,10 +344,11 @@ public class Utils {
      * @param jsonContent The JSON content to process.
      * @return The pretty-printed JSON.
      */
-    public String prettyPrintJson(String jsonContent) {
+    public static String prettyPrintJson(String jsonContent) {
         try {
             var object = objectMapper.readValue(jsonContent, Object.class);
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(object);
+            return objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(object);
         } catch (JsonProcessingException e) {
             LOG.warn("Error while pretty-printing JSON.", e);
             // Just the return the string as-is.
