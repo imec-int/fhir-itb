@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.5</version>
+        <version>3.3.4</version>
     </parent>
 
     <groupId>eu.europa.ec.service</groupId>
@@ -24,8 +24,10 @@
         <!-- Dependency and plugin versions. -->
         <com.gitb.version>1.21.1</com.gitb.version>
         <org.apache.cxf.version>4.0.3</org.apache.cxf.version>
-        <org.apache.commons.commons-lang3.version>3.13.0</org.apache.commons.commons-lang3.version>
-        <org.webjars.webjars-locator.version>0.48</org.webjars.webjars-locator.version>
+        <org.apache.commons.commons-lang3.version>3.13.0
+        </org.apache.commons.commons-lang3.version>
+        <org.webjars.webjars-locator.version>0.48
+        </org.webjars.webjars-locator.version>
         <org.webjars.bootstrap.version>5.3.2</org.webjars.bootstrap.version>
         <!-- Java version -->
         <java.release>17</java.release>
