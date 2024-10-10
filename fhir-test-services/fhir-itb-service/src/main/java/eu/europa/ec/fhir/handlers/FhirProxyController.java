@@ -23,17 +23,19 @@ public class FhirProxyController {
     private static final Logger LOGGER = LoggerFactory.getLogger(FhirProxyController.class);
 
     private final ItbRestClient itbRestClient;
+    private final FhirProxyService fhirProxyService;
 
-    public FhirProxyController(ItbRestClient itbRestClient) {
+    public FhirProxyController(ItbRestClient itbRestClient, FhirProxyService fhirProxyService) {
         this.itbRestClient = itbRestClient;
+        this.fhirProxyService = fhirProxyService;
     }
 
     @RequestMapping(value = "/proxy/{*path}")
-    public ResponseEntity<Void> handleRequest(
-            @RequestBody(required = false) String body,
-            @RequestHeader(value = "Authorization", required = false) String token,
+    public ResponseEntity<?> handleRequest(
+            HttpServletRequest request,
             @PathVariable("path") String path,
-            HttpServletRequest request
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestBody(required = false) String body
     ) {
         var requestMethod = request.getMethod();
         var testId = String.format("%s%s", requestMethod.toLowerCase(), path.replace("/", "-"));
@@ -63,13 +65,14 @@ public class FhirProxyController {
                 }
         );
 
-        // TODO: extract session ID from itbResponse
         try {
             var itbResponse = itbRestClient.startSession(startSessionPayload);
+            // TODO: extract session ID from itbResponse
+            // TODO: store session ID in a map, linked to the testId
             LOGGER.info("Test session(s) {} created!", (Object[]) itbResponse.createdSessions());
         } catch (Exception e) {
             LOGGER.warn("Failed to start test session(s): {}", e.getMessage());
-            // TODO: proxy request through
+            return fhirProxyService.proxyRequest(request, path, body);
         }
 
 

@@ -9,7 +9,7 @@ import org.springframework.web.client.RestClient;
 import java.net.http.HttpClient;
 
 @Configuration
-public class WebConfig {
+public class HandlersConfig {
     @Bean
     HttpClient httpClient() {
         return HttpClient.newHttpClient();
@@ -31,4 +31,10 @@ public class WebConfig {
                 "C5788449X6F5BX4408X8E2AX120271BFFC06"
         );
     }
+
+    @Bean
+    RestClient restClient() {
+        return RestClient.builder().build();
+    }
+
 }
