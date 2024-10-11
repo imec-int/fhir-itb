@@ -1,6 +1,5 @@
 package eu.europa.ec.fhir.handlers;
 
-import eu.europa.ec.fhir.handlers.RequestResult;
 import eu.europa.ec.fhir.state.StateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +33,10 @@ public class FhirServer {
      * Receive an allergy intolerance post.
      *
      * @param pathExtension The path part after the base URI.
-     * @param body The request's body.
+     * @param body          The request's body.
      * @return The response.
      */
-    @PostMapping(value="/server/api/{pathExtension}")
+    @PostMapping(value = "/server/api/{pathExtension}")
     public ResponseEntity<String> receivePost(@PathVariable String pathExtension, @RequestBody final String body) {
         Optional<RequestResult> response = stateManager.handleReceivedPost(pathExtension, body);
         if (response.isPresent()) {

@@ -105,6 +105,8 @@ public class MessagingServiceImpl implements MessagingService {
         LOGGER.info("Called 'send' from test session [{}].", sendRequest.getSessionId());
         SendResponse response = new SendResponse();
 
+        // TODO: check if the <send> step refers to this request from the input (e.g. deferred=true)
+        //  then call exchange() instead of making the request
         var input = SendInput.fromRequest(sendRequest);
         var uri = URI.create(input.endpoint());
 
@@ -116,7 +118,7 @@ public class MessagingServiceImpl implements MessagingService {
         var key = String.format("%s%s", input.method().toString()
                 .toLowerCase(), uri.getPath().replace("/", "-"));
 
-        deferredRequestMapper.getDeferredRequest(key)
+        deferredRequestMapper.get(key)
                 .ifPresent(deferredRequest -> {
                     LOGGER.info("Found deferred request for key [{}]", key);
                     HttpHeaders headers = new HttpHeaders();

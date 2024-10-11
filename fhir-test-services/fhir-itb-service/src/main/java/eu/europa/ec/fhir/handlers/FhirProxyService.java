@@ -1,12 +1,12 @@
 package eu.europa.ec.fhir.handlers;
 
+import eu.europa.ec.fhir.gitb.DeferredRequestMapper;
 import eu.europa.ec.fhir.utils.HttpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -23,11 +23,11 @@ public class FhirProxyService {
     @Value("${fhir.proxy.endpoint}")
     private String fhirProxyEndpoint;
 
-    public FhirProxyService(RestClient restClient) {
+    public FhirProxyService(RestClient restClient, DeferredRequestMapper deferredRequestMapper) {
         this.restClient = restClient;
     }
 
-    public URI buildURI(HttpServletRequest request, String baseUrl, String path) {
+    private URI buildURI(HttpServletRequest request, String baseUrl, String path) {
         String queryString = HttpUtils.getQueryString(request).orElse("");
         String uriString = String.format("%s/%s%s", baseUrl, path, queryString);
 
@@ -39,10 +39,7 @@ public class FhirProxyService {
         }
     }
 
-    /**
-     * Proxies a request to an endpoint in the configured FHIR server, copying the method, headers, and query parameters from the given request.
-     */
-    public ResponseEntity<String> proxyRequest(HttpServletRequest request, String path, String body) {
+    public RestClient.RequestBodySpec buildRequest(HttpServletRequest request, String path, String payload) {
         var spec = restClient
                 .method(HttpMethod.valueOf(request.getMethod()))
                 .uri(buildURI(request, fhirProxyEndpoint, path))
@@ -50,11 +47,10 @@ public class FhirProxyService {
                     HttpUtils.copyHeaders(request, headers);
                 });
 
-
-        if (body != null) {
-            spec.body(body);
+        if (payload != null) {
+            spec.body(payload);
         }
 
-        return spec.retrieve().toEntity(String.class);
+        return spec;
     }
 }

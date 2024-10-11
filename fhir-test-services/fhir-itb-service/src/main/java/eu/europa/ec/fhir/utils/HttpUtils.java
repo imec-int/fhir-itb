@@ -21,6 +21,20 @@ public final class HttpUtils {
                 .anyMatch(headerName::startsWith);
     }
 
+    /**
+     * Returns a new HttpHeaders object with the same headers from the given deferredRequest.
+     */
+    public static HttpHeaders cloneHeaders(HttpServletRequest fromRequest) {
+        HttpHeaders headers = new HttpHeaders();
+        copyHeaders(fromRequest, headers);
+        return headers;
+    }
+
+    /**
+     * Copies the headers of the given deferredRequest into the given HttpHeaders object.
+     * This method does not remove any existing headers in the given HttpHeaders object.
+     * Existing headers will be overwritten.
+     */
     public static void copyHeaders(HttpServletRequest fromRequest, HttpHeaders intoHeaders) {
         Collections.list(fromRequest.getHeaderNames())
                 .forEach((headerName) -> {
@@ -43,7 +57,7 @@ public final class HttpUtils {
     }
 
     /**
-     * Return the query string of the request, including the leading '?'.
+     * Return the query string of the deferredRequest, including the leading '?'.
      */
     public static Optional<String> getQueryString(HttpServletRequest request) {
         return Optional.ofNullable(request.getQueryString())

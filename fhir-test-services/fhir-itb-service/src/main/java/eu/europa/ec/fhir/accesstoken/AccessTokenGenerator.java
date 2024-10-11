@@ -84,7 +84,9 @@ public class AccessTokenGenerator {
                 .issuer(subject)
                 .expiration(// 1 hour
                         new java.util.Date(System.currentTimeMillis() + 3600 * 1000))
-                .audience().add("https://api-acpt.ehealth.fgov.be/auth/realms/M2M").and()
+                .audience()
+                .add("https://api-acpt.ehealth.fgov.be/auth/realms/M2M")
+                .and()
                 .id(//random id
                         java.util.UUID.randomUUID().toString())
                 .signWith(privateKey, Jwts.SIG.RS256)
@@ -113,7 +115,10 @@ public class AccessTokenGenerator {
         return value;
     }
 
-    private record Config(String certificateFilePath, String certificatePassword, String clientId, String accessTokenUrl) {}
+    private record Config(String certificateFilePath,
+                          String certificatePassword, String clientId,
+                          String accessTokenUrl) {
+    }
 
     private Config loadConfig(File configFilePath) {
         Properties properties = new Properties();
