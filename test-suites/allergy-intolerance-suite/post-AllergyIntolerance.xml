@@ -22,19 +22,21 @@
     -->
     <steps stopOnError="true">
         <!-- TODO: get data from the TestRunnerService -->
-        <interact desc="Decide outcome" id="requestData">
-            <request desc="Succeed?" name="choice"/>
-        </interact>
-        <exit desc="Finished" success="$requestData{choice}"/>
+        <send
+            id="post-AllergyIntolerance"
+            from="client"
+            to="server"
+            handler="$DOMAIN{messagingServiceAddress}">
+            <input name="deferredRequestId">"post-AllergyIntolerance"</input>
+        </send>
     </steps>
     <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
     <output>
         <success>
-            <default>"You decided to pass the test case."</default>
+            <default>"Test case passed successfully."</default>
         </success>
         <failure>
-            <!-- If no specific case is matched print a default message. -->
-            <default>"You decided to fail the test case."</default>
+            <default>"Test case failed."</default>
         </failure>
     </output>
 </testcase>

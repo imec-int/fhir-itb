@@ -1,7 +1,7 @@
 package eu.europa.ec.fhir.gitb;
 
+import eu.europa.ec.fhir.proxy.DeferredRequest;
 import org.springframework.stereotype.Service;
-import proxy.DeferredRequest;
 
 import java.util.HashMap;
 import java.util.Optional;

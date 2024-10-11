@@ -1,4 +1,4 @@
-package proxy;
+package eu.europa.ec.fhir.proxy;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
@@ -19,7 +19,7 @@ public class DeferredRequest extends DeferredResult<ResponseEntity<String>> {
     /**
      * Performs the exchange and set the result.
      */
-    public void exchange() throws IllegalStateException {
+    public ResponseEntity<String> exchange() throws IllegalStateException {
         if (isSetOrExpired()) {
             throw new IllegalStateException("Result already set or expired!");
         }
@@ -27,5 +27,7 @@ public class DeferredRequest extends DeferredResult<ResponseEntity<String>> {
         // TODO: handle exceptions from exchange
         var response = request.retrieve().toEntity(String.class);
         setResult(response);
+
+        return response;
     }
 }

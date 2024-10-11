@@ -22,9 +22,6 @@ import jakarta.xml.ws.WebServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -102,33 +99,24 @@ public class MessagingServiceImpl implements MessagingService {
      */
     @Override
     public SendResponse send(SendRequest sendRequest) {
-        LOGGER.info("Called 'send' from test session [{}].", sendRequest.getSessionId());
+        var sessionId = sendRequest.getSessionId();
+        LOGGER.info("Called 'send' from test session [{}].", sessionId);
         SendResponse response = new SendResponse();
 
-        // TODO: check if the <send> step refers to this request from the input (e.g. deferred=true)
-        //  then call exchange() instead of making the request
-        var input = SendInput.fromRequest(sendRequest);
-        var uri = URI.create(input.endpoint());
-
-        RequestResult result = fhirClient.callServer(input.method(), uri, input.payload(), input.token(), input.patientIdentifier());
-        var report = ITBUtils.createReport(TestResultType.SUCCESS);
-        ITBUtils.addCommonReportData(report, input.endpoint(), input.payload(), result);
-        response.setReport(report);
-
-        var key = String.format("%s%s", input.method().toString()
-                .toLowerCase(), uri.getPath().replace("/", "-"));
-
-        deferredRequestMapper.get(key)
-                .ifPresent(deferredRequest -> {
-                    LOGGER.info("Found deferred request for key [{}]", key);
-                    HttpHeaders headers = new HttpHeaders();
-                    result.headers().map().forEach((headerName, values) -> {
-                        for (String value : values) {
-                            headers.add(headerName, value);
-                        }
-                    });
-                    deferredRequest.setResult(new ResponseEntity<>(result.body(), headers, HttpStatusCode.valueOf(result.status())));
-                });
+        var deferredRequest = deferredRequestMapper.get(sessionId);
+        if (deferredRequest.isPresent()) {
+            LOGGER.info("Found deferred request for key [{}]", sessionId);
+            var result = deferredRequest.get().exchange();
+            var report = ITBUtils.createReport(TestResultType.SUCCESS);
+            // add response payload report
+            response.setReport(report);
+        } else {
+            var input = SendInput.fromRequest(sendRequest);
+            RequestResult result = fhirClient.callServer(input.method(), URI.create(input.endpoint()), input.payload(), input.token(), null);
+            var report = ITBUtils.createReport(TestResultType.SUCCESS);
+            ITBUtils.addCommonReportData(report, input.endpoint(), input.payload(), result);
+            response.setReport(report);
+        }
 
         return response;
     }

@@ -6,9 +6,11 @@ import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
 
-public record SendInput(HttpMethod method, String endpoint, String payload,
-                        String token,
-                        String patientIdentifier) {
+public record SendInput(
+        HttpMethod method, String endpoint, String payload,
+        String token,
+        String deferredRequestId
+) {
 
     public static SendInput fromRequest(SendRequest request) throws IllegalArgumentException {
         var input = request.getInput();
@@ -22,8 +24,8 @@ public record SendInput(HttpMethod method, String endpoint, String payload,
         var endpoint = ITBUtils.getRequiredString(input, "endpoint");
         var payload = ITBUtils.getRequiredString(input, "payload");
         var authorizationToken = ITBUtils.getRequiredString(input, "authorizationToken");
-        var patientIdentifier = ITBUtils.getRequiredString(input, "patientIdentifier");
+        var deferredRequestId = ITBUtils.getRequiredString(input, "deferredRequestId");
 
-        return new SendInput(method, endpoint, payload, authorizationToken, patientIdentifier);
+        return new SendInput(method, endpoint, payload, authorizationToken, deferredRequestId);
     }
 }

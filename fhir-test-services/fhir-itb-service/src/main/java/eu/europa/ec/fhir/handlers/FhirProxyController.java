@@ -5,6 +5,7 @@ import com.gitb.core.ValueEmbeddingEnumeration;
 import eu.europa.ec.fhir.gitb.DeferredRequestMapper;
 import eu.europa.ec.fhir.handlers.ItbRestClient.InputMapping;
 import eu.europa.ec.fhir.handlers.ItbRestClient.StartSessionRequestPayload;
+import eu.europa.ec.fhir.proxy.DeferredRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
-import proxy.DeferredRequest;
 
 /**
  * Triggers test runs based on request parameters.
@@ -74,8 +74,9 @@ public class FhirProxyController {
         var deferred = new DeferredRequest(fhirProxyService.buildRequest(request, path, body));
         try {
             var itbResponse = itbRestClient.startSession(startSessionPayload);
+            var sessionId = itbResponse.createdSessions()[0].session();
             LOGGER.info("Test session(s) {} created!", (Object[]) itbResponse.createdSessions());
-            deferredRequestMapper.put(testId, deferred);
+            deferredRequestMapper.put(sessionId, deferred);
         } catch (Exception e) {
             LOGGER.warn("Failed to start test session(s): {}", e.getMessage());
             // if the tests cannot run, perform the exchange directly

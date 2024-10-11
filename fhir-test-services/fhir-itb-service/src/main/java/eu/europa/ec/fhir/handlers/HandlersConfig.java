@@ -22,7 +22,7 @@ public class HandlersConfig {
 
         var restClient = RestClient.builder()
                 .baseUrl(baseUrl)
-                .defaultHeader("ITB_API_KEY", "C5788449X6F5BX4408X8E2AX120271BFFC06")
+                .defaultHeader("ITB_API_KEY", "FC2C742FX2585X4FE8X9982X200350CDC523")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
                 .build();
 
