@@ -34,8 +34,7 @@ public class ItbRestClient {
 
     private final RestClient restClient;
 
-    public ItbRestClient(RestClient restClient, String ITB_API_KEY) {
-        // TODO: get from configuration
+    public ItbRestClient(RestClient restClient) {
         this.restClient = restClient;
     }
 

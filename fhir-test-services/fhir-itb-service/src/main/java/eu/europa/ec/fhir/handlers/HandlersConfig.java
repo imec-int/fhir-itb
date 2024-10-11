@@ -26,10 +26,7 @@ public class HandlersConfig {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
                 .build();
 
-        return new ItbRestClient(
-                restClient,
-                "C5788449X6F5BX4408X8E2AX120271BFFC06"
-        );
+        return new ItbRestClient(restClient);
     }
 
     @Bean
