@@ -138,7 +138,7 @@ public class ValidationServiceImpl implements ValidationService {
                             /*
                              * You can set line numbers on report items, referring also to the name of the report context item
                              * that corresponds to the relevant content ("input" in this case). Apart from including this
-                             * in XML and PDF reports, this allows the Test Bed's UI to pop up the specific content and
+                             * in XML and PDF reports, this allows the Test Bed's UI to remove up the specific content and
                              * location when the item in question is clicked.
                              */
                             var lineNumber = getLineNumber(issue);

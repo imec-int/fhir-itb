@@ -103,12 +103,12 @@ public class MessagingServiceImpl implements MessagingService {
         LOGGER.info("Called 'send' from test session [{}].", sessionId);
         SendResponse response = new SendResponse();
 
-        var deferredRequest = deferredRequestMapper.get(sessionId);
+        var deferredRequest = deferredRequestMapper.remove(sessionId);
         if (deferredRequest.isPresent()) {
             LOGGER.info("Found deferred request for key [{}]", sessionId);
             var result = deferredRequest.get().exchange();
+            // TODO: return the result to the test session
             var report = ITBUtils.createReport(TestResultType.SUCCESS);
-            // add response payload report
             response.setReport(report);
         } else {
             var input = SendInput.fromRequest(sendRequest);

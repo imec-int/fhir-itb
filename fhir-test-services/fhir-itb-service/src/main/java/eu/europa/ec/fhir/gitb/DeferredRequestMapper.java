@@ -15,7 +15,11 @@ public class DeferredRequestMapper {
         deferredRequests.put(key, deferredResult);
     }
 
-    public Optional<DeferredRequest> get(String testId) {
-        return Optional.ofNullable(deferredRequests.get(testId));
+    public Optional<DeferredRequest> get(String key) {
+        return Optional.ofNullable(deferredRequests.get(key));
+    }
+
+    public Optional<DeferredRequest> remove(String key) {
+        return Optional.ofNullable(deferredRequests.remove(key));
     }
 }
