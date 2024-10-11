@@ -41,11 +41,11 @@ public class ItbRestClient {
 
     /**
      * Starts a test session in ITB.
-     * Returns the session ID.
      */
     public StartSessionResponse startSession(StartSessionRequestPayload payload) throws IOException {
 
-        var req = restClient.post()
+        var req = restClient
+                .post()
                 .uri("/tests/start")
                 .body(payload);
 
