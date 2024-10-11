@@ -23,11 +23,15 @@
     <steps stopOnError="true">
         <!-- TODO: get data from the TestRunnerService -->
         <send
-            id="post-AllergyIntolerance"
             from="client"
             to="server"
             handler="$DOMAIN{messagingServiceAddress}">
-            <input name="deferredRequestId">"post-AllergyIntolerance"</input>
+        </send>
+        <send from="client" to="server" handler="HttpMessagingV2">
+            <input name="uri">
+                "https://webhook.site/61aeb19f-de05-44a8-8076-57defe6dd495"
+            </input>
+            <input name="method">"GET"</input>
         </send>
     </steps>
     <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
