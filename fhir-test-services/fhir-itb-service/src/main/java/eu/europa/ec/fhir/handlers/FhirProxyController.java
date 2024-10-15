@@ -5,7 +5,7 @@ import com.gitb.core.ValueEmbeddingEnumeration;
 import eu.europa.ec.fhir.gitb.DeferredRequestMapper;
 import eu.europa.ec.fhir.handlers.ItbRestClient.InputMapping;
 import eu.europa.ec.fhir.handlers.ItbRestClient.StartSessionRequestPayload;
-import eu.europa.ec.fhir.proxy.DeferredRequest;
+import eu.europa.ec.fhir.proxy.DeferredExchange;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +71,7 @@ public class FhirProxyController {
         );
 
         // TODO: set some reasonable timeout
-        var deferred = new DeferredRequest(fhirProxyService.buildRequest(request, path, body));
+        var deferred = new DeferredExchange(fhirProxyService.buildRequest(request, path, body));
         try {
             var itbResponse = itbRestClient.startSession(startSessionPayload);
             var sessionId = itbResponse.createdSessions()[0].session();

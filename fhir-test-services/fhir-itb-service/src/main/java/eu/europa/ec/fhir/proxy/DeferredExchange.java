@@ -8,11 +8,11 @@ import org.springframework.web.context.request.async.DeferredResult;
  * Defers the exchange of a {@link RestClient.RequestBodySpec}.
  * TODO: support generic types (ResponseEntity<T>)
  */
-public class DeferredRequest extends DeferredResult<ResponseEntity<String>> {
+public class DeferredExchange extends DeferredResult<ResponseEntity<String>> {
 
     private final RestClient.RequestBodySpec request;
 
-    public DeferredRequest(RestClient.RequestBodySpec request) {
+    public DeferredExchange(RestClient.RequestBodySpec request) {
         this.request = request;
     }
 
