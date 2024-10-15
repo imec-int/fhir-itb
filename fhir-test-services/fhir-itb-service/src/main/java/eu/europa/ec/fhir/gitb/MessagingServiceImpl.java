@@ -1,16 +1,8 @@
 package eu.europa.ec.fhir.gitb;
 
-import com.gitb.ms.BasicRequest;
-import com.gitb.ms.BeginTransactionRequest;
-import com.gitb.ms.FinalizeRequest;
-import com.gitb.ms.GetModuleDefinitionResponse;
-import com.gitb.ms.InitiateRequest;
-import com.gitb.ms.InitiateResponse;
-import com.gitb.ms.MessagingService;
-import com.gitb.ms.ReceiveRequest;
-import com.gitb.ms.SendRequest;
-import com.gitb.ms.SendResponse;
+import com.gitb.core.ValueEmbeddingEnumeration;
 import com.gitb.ms.Void;
+import com.gitb.ms.*;
 import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.handlers.FhirClient;
 import eu.europa.ec.fhir.handlers.RequestResult;
@@ -45,10 +37,10 @@ public class MessagingServiceImpl implements MessagingService {
     @Autowired
     private FhirClient fhirClient;
 
-    private final DeferredRequestMapper deferredRequestMapper;
+    private final DeferredExchangeMapper deferredExchangeMapper;
 
-    public MessagingServiceImpl(DeferredRequestMapper deferredRequestMapper) {
-        this.deferredRequestMapper = deferredRequestMapper;
+    public MessagingServiceImpl(DeferredExchangeMapper deferredExchangeMapper) {
+        this.deferredExchangeMapper = deferredExchangeMapper;
     }
 
     /**
@@ -100,15 +92,21 @@ public class MessagingServiceImpl implements MessagingService {
     @Override
     public SendResponse send(SendRequest sendRequest) {
         var sessionId = sendRequest.getSessionId();
-        LOGGER.info("Called 'send' from test session [{}].", sessionId);
         SendResponse response = new SendResponse();
 
-        var deferredRequest = deferredRequestMapper.remove(sessionId);
+        var deferredRequest = deferredExchangeMapper.remove(sessionId);
         if (deferredRequest.isPresent()) {
             LOGGER.info("Found deferred request for key [{}]", sessionId);
             var result = deferredRequest.get().exchange();
-            // TODO: return the result to the test session
+
+            // TODO: pass the input the same way that the response is passed in the built-in Http handler
+            //  (a single object with all the necessary fields)
             var report = ITBUtils.createReport(TestResultType.SUCCESS);
+            var contextItem = report.getContext().getItem();
+            contextItem.add(ITBUtils.createAnyContent("responseBody", result.getBody(), ValueEmbeddingEnumeration.STRING));
+            contextItem.add(ITBUtils.createAnyContent("responseHeaders", result.getHeaders().toString(), ValueEmbeddingEnumeration.STRING));
+            contextItem.add(ITBUtils.createAnyContent("responseStatusCode", result.getStatusCode().toString(), ValueEmbeddingEnumeration.STRING));
+
             response.setReport(report);
         } else {
             var input = SendInput.fromRequest(sendRequest);

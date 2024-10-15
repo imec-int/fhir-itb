@@ -19,24 +19,20 @@ public class ItbRestClient {
 
     public record StartSessionRequestPayload(
             String[] testCase,
-            InputMapping[] inputMapping) {
-    }
+            InputMapping[] inputMapping
+    ) {}
+
+    public record InputMapping(AnyContent input) {}
 
     public record SessionInfo(
             String testSuite,
             String testCase,
             String session
-    ) {
-    }
-
-    public record InputMapping(AnyContent input) {
-    }
+    ) {}
 
     private final RestClient restClient;
 
-    public ItbRestClient(RestClient restClient) {
-        this.restClient = restClient;
-    }
+    public ItbRestClient(RestClient restClient) {this.restClient = restClient;}
 
     /**
      * Starts a test session in ITB.

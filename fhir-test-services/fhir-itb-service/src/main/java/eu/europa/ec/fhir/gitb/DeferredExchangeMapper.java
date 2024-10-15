@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 @Service
-public class DeferredRequestMapper {
+public class DeferredExchangeMapper {
 
     private final HashMap<String, DeferredExchange> deferredMap = new HashMap<>();
 

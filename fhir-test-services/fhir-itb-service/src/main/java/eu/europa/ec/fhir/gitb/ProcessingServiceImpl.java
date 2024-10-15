@@ -1,14 +1,8 @@
 package eu.europa.ec.fhir.gitb;
 
 import com.gitb.core.ValueEmbeddingEnumeration;
-import com.gitb.ps.BasicRequest;
-import com.gitb.ps.BeginTransactionRequest;
-import com.gitb.ps.BeginTransactionResponse;
-import com.gitb.ps.GetModuleDefinitionResponse;
-import com.gitb.ps.ProcessRequest;
-import com.gitb.ps.ProcessResponse;
-import com.gitb.ps.ProcessingService;
 import com.gitb.ps.Void;
+import com.gitb.ps.*;
 import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.accesstoken.AccessTokenGenerator;
 import eu.europa.ec.fhir.handlers.KarateHandler;
@@ -77,7 +71,7 @@ public class ProcessingServiceImpl implements ProcessingService {
 
             // Produce the resulting report.
             response.getOutput()
-                    .add(ITBUtils.createAnyContentSimple("result", pseudominizedPatient, ValueEmbeddingEnumeration.STRING));
+                    .add(ITBUtils.createAnyContent("result", pseudominizedPatient, ValueEmbeddingEnumeration.STRING));
         }
 
         if ("authentication".equals(operation)) {
@@ -89,7 +83,7 @@ public class ProcessingServiceImpl implements ProcessingService {
             LOG.info(String.format("generated access token: [%s].", accessToken));
             // Produce the resulting report.
             response.getOutput()
-                    .add(ITBUtils.createAnyContentSimple("result", accessToken, ValueEmbeddingEnumeration.STRING));
+                    .add(ITBUtils.createAnyContent("result", accessToken, ValueEmbeddingEnumeration.STRING));
         }
 
         if ("karate".equals(operation)) {
@@ -102,9 +96,9 @@ public class ProcessingServiceImpl implements ProcessingService {
 
             // Produce the resulting report.
             response.getOutput()
-                    .add(ITBUtils.createAnyContentSimple("result", String.valueOf((boolean) karateResults.get("allPassed")), ValueEmbeddingEnumeration.STRING));
+                    .add(ITBUtils.createAnyContent("result", String.valueOf((boolean) karateResults.get("allPassed")), ValueEmbeddingEnumeration.STRING));
             response.getOutput()
-                    .add(ITBUtils.createAnyContentSimple("resultDetails", karateResults.toString(), ValueEmbeddingEnumeration.STRING));
+                    .add(ITBUtils.createAnyContent("resultDetails", karateResults.toString(), ValueEmbeddingEnumeration.STRING));
         }
 
 

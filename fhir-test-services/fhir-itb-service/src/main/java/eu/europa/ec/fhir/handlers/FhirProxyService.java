@@ -1,6 +1,5 @@
 package eu.europa.ec.fhir.handlers;
 
-import eu.europa.ec.fhir.gitb.DeferredRequestMapper;
 import eu.europa.ec.fhir.utils.HttpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -23,13 +22,13 @@ public class FhirProxyService {
     @Value("${fhir.proxy.endpoint}")
     private String fhirProxyEndpoint;
 
-    public FhirProxyService(RestClient restClient, DeferredRequestMapper deferredRequestMapper) {
+    public FhirProxyService(RestClient restClient) {
         this.restClient = restClient;
     }
 
     private URI buildURI(HttpServletRequest request, String baseUrl, String path) {
         String queryString = HttpUtils.getQueryString(request).orElse("");
-        String uriString = String.format("%s/%s%s", baseUrl, path, queryString);
+        String uriString = String.format("%s%s%s", baseUrl, path, queryString);
 
         try {
             return new URL(uriString).toURI();

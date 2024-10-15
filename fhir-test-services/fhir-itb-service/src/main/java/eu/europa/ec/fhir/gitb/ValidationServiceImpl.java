@@ -5,18 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitb.core.LogLevel;
 import com.gitb.core.ValueEmbeddingEnumeration;
-import com.gitb.tr.BAR;
 import com.gitb.tr.ObjectFactory;
-import com.gitb.tr.TAR;
-import com.gitb.tr.TestAssertionGroupReportsType;
-import com.gitb.tr.TestAssertionReportType;
-import com.gitb.tr.TestResultType;
-import com.gitb.tr.ValidationCounters;
-import com.gitb.vs.GetModuleDefinitionResponse;
-import com.gitb.vs.ValidateRequest;
-import com.gitb.vs.ValidationResponse;
-import com.gitb.vs.ValidationService;
+import com.gitb.tr.*;
 import com.gitb.vs.Void;
+import com.gitb.vs.*;
 import eu.europa.ec.fhir.handlers.FhirClient;
 import eu.europa.ec.fhir.handlers.RequestResult;
 import eu.europa.ec.fhir.utils.ITBUtils;
@@ -113,10 +105,10 @@ public class ValidationServiceImpl implements ValidationService {
         // Add the validated input and produced "raw" validation reports as context items.
         report.getContext()
                 .getItem()
-                .add(ITBUtils.createAnyContentSimple("input", validationRequest, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
+                .add(ITBUtils.createAnyContent("input", validationRequest, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
         report.getContext()
                 .getItem()
-                .add(ITBUtils.createAnyContentSimple("report", validationResponse, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
+                .add(ITBUtils.createAnyContent("report", validationResponse, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
         // Parse the reported issues to convert them to report items.
         try {
             var root = objectMapper.readTree(validationResponse);

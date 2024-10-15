@@ -28,11 +28,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -218,6 +214,10 @@ public class ITBUtils {
         return input.map(ITBUtils::asString);
     }
 
+    public static AnyContent createAnyContent(String name, String value) {
+        return createAnyContent(name, value, ValueEmbeddingEnumeration.STRING, null);
+    }
+
     /**
      * Create a AnyContent object value based on the provided parameters.
      *
@@ -226,8 +226,8 @@ public class ITBUtils {
      * @param embeddingMethod The way in which this value is to be considered.
      * @return The value.
      */
-    public static AnyContent createAnyContentSimple(String name, String value, ValueEmbeddingEnumeration embeddingMethod) {
-        return createAnyContentSimple(name, value, embeddingMethod, null);
+    public static AnyContent createAnyContent(String name, String value, ValueEmbeddingEnumeration embeddingMethod) {
+        return createAnyContent(name, value, embeddingMethod, null);
     }
 
     /**
@@ -239,7 +239,7 @@ public class ITBUtils {
      * @param mimeType        The mime type of the content.
      * @return The value.
      */
-    public static AnyContent createAnyContentSimple(String name, String value, ValueEmbeddingEnumeration embeddingMethod, String mimeType) {
+    public static AnyContent createAnyContent(String name, String value, ValueEmbeddingEnumeration embeddingMethod, String mimeType) {
         AnyContent input = new AnyContent();
         input.setName(name);
         input.setValue(value);
@@ -311,11 +311,11 @@ public class ITBUtils {
             requestItem.setName("request");
             if (endpoint != null) {
                 requestItem.getItem()
-                        .add(createAnyContentSimple("endpoint", endpoint, ValueEmbeddingEnumeration.STRING));
+                        .add(createAnyContent("endpoint", endpoint, ValueEmbeddingEnumeration.STRING));
             }
             if (payload != null) {
                 requestItem.getItem()
-                        .add(createAnyContentSimple("payload", payload, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
+                        .add(createAnyContent("payload", payload, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
             }
             report.getContext().getItem().add(requestItem);
         }
@@ -323,7 +323,7 @@ public class ITBUtils {
         responseItem.setType("map");
         responseItem.setName("response");
         responseItem.getItem()
-                .add(createAnyContentSimple("status", String.valueOf(result.status()), ValueEmbeddingEnumeration.STRING));
+                .add(createAnyContent("status", String.valueOf(result.status()), ValueEmbeddingEnumeration.STRING));
         if (result.body() != null && !result.body().isBlank()) {
             String contentType = null;
             var contentTypeHeader = result.contentType();
@@ -333,7 +333,7 @@ public class ITBUtils {
                 contentType = MediaType.APPLICATION_JSON_VALUE;
             }
             responseItem.getItem()
-                    .add(createAnyContentSimple("payload", result.body(), ValueEmbeddingEnumeration.STRING, contentType));
+                    .add(createAnyContent("payload", result.body(), ValueEmbeddingEnumeration.STRING, contentType));
         }
         report.getContext().getItem().add(responseItem);
     }

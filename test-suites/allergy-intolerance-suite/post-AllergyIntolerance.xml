@@ -17,22 +17,44 @@
         <gitb:actor id="client" role="SUT"/>
         <gitb:actor id="server"/>
     </actors>
+    <variables>
+        <!--
+            The ProxyHandler will forward variables below to all test cases.
+        -->
+        <var name="requestBody" type="string"/>
+        <var name="requestMethod" type="string"/>
+        <var name="requestToken" type="string"/>
+    </variables>
     <!--
-        Setting "stopOnError" to true will stop the test session as soon as an error is encountered. By default test sessions will continue regardless of errors.
+        Setting "stopOnError" to true will stop the test session as soon as an error is encountered. By default, test sessions will continue regardless of errors.
     -->
     <steps stopOnError="true">
         <!-- TODO: get data from the TestRunnerService -->
-        <send
-            from="client"
-            to="server"
-            handler="$DOMAIN{messagingServiceAddress}">
-        </send>
-        <send from="client" to="server" handler="HttpMessagingV2">
+        <log>'Started session '||$SESSION{sessionId}||' for test case
+            '||$SESSION{testCaseId}||''
+        </log>
+        <!-- Log the received request parameters -->
+        <log>
+            "Body: " || $requestBody
+        </log>
+        <log>
+            "Method: " || $requestMethod
+        </log>
+        <log>
+            "Token: " || $requestToken
+        </log>
+
+        <!-- Use handler="$DOMAIN{messagingServiceAddress}" to trigger the Proxied request and get the response. -->
+        <send id="proxyRequest" handler="$DOMAIN{messagingServiceAddress}" from="client" to="server"/>
+
+        <!-- Use the HttpMessagingV2 handler to send ordinary HTTP requests. -->
+        <send id="httpSend" from="client" to="server" handler="HttpMessagingV2">
             <input name="uri">
-                "https://webhook.site/61aeb19f-de05-44a8-8076-57defe6dd495"
+                "https://webhook.site/a76f3805-4023-48a4-8cad-73f57db67a43/test"
             </input>
-            <input name="method">"GET"</input>
+            <input name="method">"POST"</input>
         </send>
+        <log>$httpSend{response}</log>
     </steps>
     <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
     <output>
