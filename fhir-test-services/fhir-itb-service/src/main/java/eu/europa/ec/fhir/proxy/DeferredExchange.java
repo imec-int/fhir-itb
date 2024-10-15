@@ -17,17 +17,20 @@ public class DeferredExchange extends DeferredResult<ResponseEntity<String>> {
     }
 
     /**
-     * Performs the exchange and set the result.
+     * Performs the exchange and set the DeferredResult.
      */
     public ResponseEntity<String> exchange() throws IllegalStateException {
         if (isSetOrExpired()) {
             throw new IllegalStateException("Result already set or expired!");
         }
 
-        // TODO: handle exceptions from exchange
-        var response = request.retrieve().toEntity(String.class);
-        setResult(response);
+        var response = request
+                .retrieve()
+                // don't care about the result, just forward the response
+                .onStatus(status -> true, (req, res) -> {})
+                .toEntity(String.class);
 
+        setResult(response);
         return response;
     }
 }
