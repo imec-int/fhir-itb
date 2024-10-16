@@ -9,7 +9,7 @@ import java.util.function.Supplier;
  *
  * @param <T>
  */
-public class DeferredSupplier<T> {
+public class DeferredSupplier<T> implements Supplier<T> {
 
     private final DeferredResult<T> deferredResult;
     private final Supplier<T> supplier;
@@ -24,7 +24,7 @@ public class DeferredSupplier<T> {
      * If the result has already been set, the result is returned without calling the supplier.
      * Throws an {@link IllegalStateException} if the result has expired.
      */
-    public T execute() throws IllegalStateException {
+    public T get() throws IllegalStateException {
         if (deferredResult.isSetOrExpired()) {
             if (deferredResult.hasResult()) {
                 return (T) deferredResult.getResult();

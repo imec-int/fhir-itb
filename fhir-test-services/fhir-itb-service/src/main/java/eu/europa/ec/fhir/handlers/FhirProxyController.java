@@ -73,7 +73,7 @@ public class FhirProxyController {
             deferredRequests.put(sessionId, deferredRequest);
         } catch (Exception e) {
             LOGGER.warn("Failed to start test session(s): {}", e.getMessage());
-            deferredRequest.execute();
+            deferredRequest.get();
         }
 
         return deferredResult;

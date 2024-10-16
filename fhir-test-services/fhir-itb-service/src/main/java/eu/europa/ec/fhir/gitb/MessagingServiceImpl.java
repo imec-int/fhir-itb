@@ -99,7 +99,7 @@ public class MessagingServiceImpl implements MessagingService {
         var deferredRequest = deferredRequestMapper.get(sessionId);
         if (deferredRequest.isPresent()) {
             LOGGER.info("Found deferred request for key [{}]", sessionId);
-            ResponseEntity<String> result = deferredRequest.get().execute();
+            ResponseEntity<String> result = deferredRequest.get().get();
 
             // TODO: pass the input the same way that the response is passed in the built-in Http handler
             //  (a single object with all the necessary fields)
