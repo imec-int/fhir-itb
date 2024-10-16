@@ -1,25 +1,25 @@
 package eu.europa.ec.fhir.gitb;
 
+import eu.europa.ec.fhir.proxy.DeferredSupplier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
- * Maps test session IDs to {@link Supplier<ResponseEntity>}.
+ * Maps test session IDs to {@link DeferredSupplier}s.
  */
 @Service
 public class DeferredRequestMapper {
 
-    private final HashMap<String, Supplier<ResponseEntity<String>>> deferredMap = new HashMap<>();
+    private final HashMap<String, DeferredSupplier<ResponseEntity<String>>> deferredMap = new HashMap<>();
 
-    public void put(String key, Supplier<ResponseEntity<String>> deferredRequest) {
-        deferredMap.put(key, deferredRequest);
+    public void put(String key, DeferredSupplier<ResponseEntity<String>> deferredSupplier) {
+        deferredMap.put(key, deferredSupplier);
     }
 
-    public Optional<Supplier<ResponseEntity<String>>> get(String key) {
+    public Optional<DeferredSupplier<ResponseEntity<String>>> get(String key) {
         return Optional.ofNullable(deferredMap.get(key));
     }
 

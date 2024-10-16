@@ -14,6 +14,7 @@ import jakarta.xml.ws.WebServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -95,11 +96,10 @@ public class MessagingServiceImpl implements MessagingService {
         var sessionId = sendRequest.getSessionId();
         SendResponse response = new SendResponse();
 
-        var optDeferredRequest = deferredRequestMapper.get(sessionId);
-        if (optDeferredRequest.isPresent()) {
+        var deferredRequest = deferredRequestMapper.get(sessionId);
+        if (deferredRequest.isPresent()) {
             LOGGER.info("Found deferred request for key [{}]", sessionId);
-            var deferredRequest = optDeferredRequest.get();
-            var result = deferredRequest.get();
+            ResponseEntity<String> result = deferredRequest.get().execute();
 
             // TODO: pass the input the same way that the response is passed in the built-in Http handler
             //  (a single object with all the necessary fields)
