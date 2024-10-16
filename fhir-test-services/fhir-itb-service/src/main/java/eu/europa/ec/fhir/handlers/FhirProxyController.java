@@ -1,16 +1,17 @@
 package eu.europa.ec.fhir.handlers;
 
-import eu.europa.ec.fhir.gitb.DeferredExchangeMapper;
-import eu.europa.ec.fhir.handlers.ItbRestClient.InputMapping;
-import eu.europa.ec.fhir.handlers.ItbRestClient.StartSessionRequestPayload;
-import eu.europa.ec.fhir.proxy.DeferredExchange;
-import eu.europa.ec.fhir.utils.ITBUtils;
+import eu.europa.ec.fhir.gitb.DeferredRequestMapper;
+import eu.europa.ec.fhir.gitb.api.model.StartSessionRequestPayload;
+import eu.europa.ec.fhir.http.HttpParams;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.context.request.async.DeferredResult;
+
+import java.util.function.Supplier;
 
 /**
  * Triggers test runs based on request parameters.
@@ -22,12 +23,14 @@ public class FhirProxyController {
 
     private final ItbRestClient itbRestClient;
     private final FhirProxyService fhirProxyService;
-    private final DeferredExchangeMapper deferredExchangeMapper;
+    private final DeferredRequestMapper deferredRequests;
+    private final RestClient restClient;
 
-    public FhirProxyController(ItbRestClient itbRestClient, FhirProxyService fhirProxyService, DeferredExchangeMapper deferredExchangeMapper) {
+    public FhirProxyController(ItbRestClient itbRestClient, FhirProxyService fhirProxyService, DeferredRequestMapper deferredRequests, RestClient restClient) {
         this.itbRestClient = itbRestClient;
         this.fhirProxyService = fhirProxyService;
-        this.deferredExchangeMapper = deferredExchangeMapper;
+        this.deferredRequests = deferredRequests;
+        this.restClient = restClient;
     }
 
     @RequestMapping(value = "/proxy/{*path}")
@@ -37,36 +40,46 @@ public class FhirProxyController {
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestBody(required = false) String body
     ) {
-        var requestMethod = request.getMethod();
-        var testId = String.format("%s%s", requestMethod.toLowerCase(), path.replace("/", "-"));
+        HttpParams requestParams = fhirProxyService.getFhirHttpParams(request, path, body);
+        String testId = String.format("%s%s", requestParams.method().toString().toLowerCase(), path.replace("/", "-"));
+
         LOGGER.debug("Starting test session(s) for \"{}\"", testId);
 
-        // TODO: pass the input the same way that the response is passed (a single object with all the necessary fields)
-        var requestBodyInput = ITBUtils.createAnyContent("requestBody", body);
-        var requestTokenInput = ITBUtils.createAnyContent("requestToken", token);
-        var requestMethodInput = ITBUtils.createAnyContent("requestMethod", requestMethod);
+        var deferredResult = new DeferredResult<ResponseEntity<String>>();
+        Supplier<ResponseEntity<String>> deferred = () -> {
+            // proxy the request
+            var spec = restClient
+                    .method(requestParams.method())
+                    .uri(requestParams.uri())
+                    .headers(headers -> headers.addAll(requestParams.headers()));
 
-        var startSessionPayload = new StartSessionRequestPayload(
-                new String[]{testId},
-                new InputMapping[]{
-                        new InputMapping(requestBodyInput),
-                        new InputMapping(requestTokenInput),
-                        new InputMapping(requestMethodInput)
-                }
-        );
+            if (requestParams.body() != null) {
+                spec.body(requestParams.body());
+            }
 
-        var deferred = new DeferredExchange(fhirProxyService.buildRequest(request, path, body));
+            var response = spec.retrieve()
+                    // don't care about the result, just forward the response
+                    .onStatus(status -> true, (req, res) -> {})
+                    .toEntity(String.class);
+
+            deferredResult.setResult(response);
+            return response;
+        };
+
         try {
+            // start test sessions and defer the request
+            var startSessionPayload = StartSessionRequestPayload.fromRequestParams(new String[]{testId}, requestParams);
             var itbResponse = itbRestClient.startSession(startSessionPayload);
-            var sessionId = itbResponse.createdSessions()[0].session();
-            LOGGER.info("Test session(s) {} created!", (Object[]) itbResponse.createdSessions());
-            deferredExchangeMapper.put(sessionId, deferred);
+            var createdSessions = itbResponse.createdSessions();
+            var sessionId = createdSessions[0].session();
+
+            LOGGER.info("Test session(s) {} created!", (Object[]) createdSessions);
+            deferredRequests.put(sessionId, deferred);
         } catch (Exception e) {
             LOGGER.warn("Failed to start test session(s): {}", e.getMessage());
-            // if the tests cannot run, perform the exchange directly
-            deferred.exchange();
+            deferred.get();
         }
 
-        return deferred;
+        return deferredResult;
     }
 }

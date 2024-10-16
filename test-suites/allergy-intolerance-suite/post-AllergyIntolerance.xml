@@ -21,9 +21,7 @@
         <!--
             The ProxyHandler will forward variables below to all test cases.
         -->
-        <var name="requestBody" type="string"/>
-        <var name="requestMethod" type="string"/>
-        <var name="requestToken" type="string"/>
+        <var name="request" type="map"/>
     </variables>
     <!--
         Setting "stopOnError" to true will stop the test session as soon as an error is encountered. By default, test sessions will continue regardless of errors.
@@ -35,13 +33,16 @@
         </log>
         <!-- Log the received request parameters -->
         <log>
-            "Body: " || $requestBody
+            "URI: " || $request{uri}
         </log>
         <log>
-            "Method: " || $requestMethod
+            "Method: " || $request{method}
         </log>
         <log>
-            "Token: " || $requestToken
+            "Headers: " || $request{headers}
+        </log>
+        <log>
+            "Body: " || $request{body}
         </log>
 
         <!-- Use handler="$DOMAIN{messagingServiceAddress}" to trigger the Proxied request and get the response. -->
@@ -55,6 +56,7 @@
             <input name="method">"POST"</input>
         </send>
         <log>$httpSend{response}</log>
+        <log>$httpSend{response}{status}</log>
     </steps>
     <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
     <output>

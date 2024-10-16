@@ -1,6 +1,7 @@
 package eu.europa.ec.fhir.handlers;
 
-import com.gitb.core.AnyContent;
+import eu.europa.ec.fhir.gitb.api.model.StartSessionRequestPayload;
+import eu.europa.ec.fhir.gitb.api.model.StartSessionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
@@ -10,26 +11,6 @@ import java.io.IOException;
 public class ItbRestClient {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ItbRestClient.class);
-
-
-    public record StartSessionResponse(
-            SessionInfo[] createdSessions
-    ) {
-    }
-
-    public record StartSessionRequestPayload(
-            String[] testCase,
-            InputMapping[] inputMapping
-    ) {}
-
-    public record InputMapping(AnyContent input) {}
-
-    public record SessionInfo(
-            String testSuite,
-            String testCase,
-            String session
-    ) {}
-
     private final RestClient restClient;
 
     public ItbRestClient(RestClient restClient) {this.restClient = restClient;}

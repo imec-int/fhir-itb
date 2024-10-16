@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.Optional;
 
 
 /**
@@ -37,10 +38,10 @@ public class MessagingServiceImpl implements MessagingService {
     @Autowired
     private FhirClient fhirClient;
 
-    private final DeferredExchangeMapper deferredExchangeMapper;
+    private final DeferredRequestMapper deferredRequestMapper;
 
-    public MessagingServiceImpl(DeferredExchangeMapper deferredExchangeMapper) {
-        this.deferredExchangeMapper = deferredExchangeMapper;
+    public MessagingServiceImpl(DeferredRequestMapper deferredRequestMapper) {
+        this.deferredRequestMapper = deferredRequestMapper;
     }
 
     /**
@@ -94,16 +95,17 @@ public class MessagingServiceImpl implements MessagingService {
         var sessionId = sendRequest.getSessionId();
         SendResponse response = new SendResponse();
 
-        var deferredRequest = deferredExchangeMapper.remove(sessionId);
-        if (deferredRequest.isPresent()) {
+        var optDeferredRequest = deferredRequestMapper.get(sessionId);
+        if (optDeferredRequest.isPresent()) {
             LOGGER.info("Found deferred request for key [{}]", sessionId);
-            var result = deferredRequest.get().exchange();
+            var deferredRequest = optDeferredRequest.get();
+            var result = deferredRequest.get();
 
             // TODO: pass the input the same way that the response is passed in the built-in Http handler
             //  (a single object with all the necessary fields)
             var report = ITBUtils.createReport(TestResultType.SUCCESS);
             var contextItem = report.getContext().getItem();
-            contextItem.add(ITBUtils.createAnyContent("responseBody", result.getBody(), ValueEmbeddingEnumeration.STRING));
+            contextItem.add(ITBUtils.createAnyContent("responseBody", Optional.ofNullable(result.getBody()).map(Object::toString).orElse(""), ValueEmbeddingEnumeration.STRING));
             contextItem.add(ITBUtils.createAnyContent("responseHeaders", result.getHeaders().toString(), ValueEmbeddingEnumeration.STRING));
             contextItem.add(ITBUtils.createAnyContent("responseStatusCode", result.getStatusCode().toString(), ValueEmbeddingEnumeration.STRING));
 
@@ -192,8 +194,10 @@ public class MessagingServiceImpl implements MessagingService {
      */
     @Override
     public Void finalize(FinalizeRequest finalizeRequest) {
-        LOGGER.info("Finalising test session [{}].", finalizeRequest.getSessionId());
-        stateManager.destroySession(finalizeRequest.getSessionId());
+        var sessionId = finalizeRequest.getSessionId();
+        LOGGER.info("Finalising test session [{}].", sessionId);
+        deferredRequestMapper.remove(sessionId);
+        stateManager.destroySession(sessionId);
         return new Void();
     }
 

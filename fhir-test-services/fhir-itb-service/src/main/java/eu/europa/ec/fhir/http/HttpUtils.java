@@ -1,4 +1,4 @@
-package eu.europa.ec.fhir.utils;
+package eu.europa.ec.fhir.http;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
