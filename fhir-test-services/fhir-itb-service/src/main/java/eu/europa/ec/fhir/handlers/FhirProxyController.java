@@ -56,10 +56,15 @@ public class FhirProxyController {
                 spec.body(proxyRequestParams.body());
             }
 
-            return spec.retrieve()
-                    // don't care about the result, just forward the response
-                    .onStatus(status -> true, (req, res) -> {})
-                    .toEntity(String.class);
+            try {
+                return spec.retrieve()
+                        // don't care about the result, just forward the response
+                        .onStatus(status -> true, (req, res) -> {})
+                        .toEntity(String.class);
+            } catch (Exception e) {
+                LOGGER.warn("Failed to proxy request: {}", e.getMessage());
+                return ResponseEntity.status(500).body("Failed to proxy request");
+            }
         });
 
         try {
