@@ -1,6 +1,6 @@
 package eu.europa.ec.fhir.gitb;
 
-import com.gitb.core.ValueEmbeddingEnumeration;
+import com.gitb.core.AnyContent;
 import com.gitb.ms.Void;
 import com.gitb.ms.*;
 import com.gitb.tr.TestResultType;
@@ -101,14 +101,23 @@ public class MessagingServiceImpl implements MessagingService {
             LOGGER.info("Found deferred request for key [{}]", sessionId);
             ResponseEntity<String> result = deferredRequest.get().get();
 
-            // TODO: pass the input the same way that the response is passed in the built-in Http handler
-            //  (a single object with all the necessary fields)
-            var report = ITBUtils.createReport(TestResultType.SUCCESS);
-            var contextItem = report.getContext().getItem();
-            contextItem.add(ITBUtils.createAnyContent("responseBody", Optional.ofNullable(result.getBody()).map(Object::toString).orElse(""), ValueEmbeddingEnumeration.STRING));
-            contextItem.add(ITBUtils.createAnyContent("responseHeaders", result.getHeaders().toString(), ValueEmbeddingEnumeration.STRING));
-            contextItem.add(ITBUtils.createAnyContent("responseStatusCode", result.getStatusCode().toString(), ValueEmbeddingEnumeration.STRING));
+            LOGGER.info("Deferred Request resolved");
 
+            var report = ITBUtils.createReport(TestResultType.SUCCESS);
+            var reportContext = report.getContext();
+            reportContext.setName("report");
+            reportContext.setType("map");
+
+            var responseContent = new AnyContent();
+            responseContent.setName("response");
+            responseContent.setType("map");
+
+            var responseItems = responseContent.getItem();
+            responseItems.add(ITBUtils.createAnyContent("status", result.getStatusCode().toString()));
+            responseItems.add(ITBUtils.createAnyContent("headers", result.getHeaders().toString()));
+            responseItems.add(ITBUtils.createAnyContent("body", Optional.ofNullable(result.getBody()).map(Object::toString).orElse("")));
+
+            reportContext.getItem().add(responseContent);
             response.setReport(report);
         } else {
             var input = SendInput.fromRequest(sendRequest);
