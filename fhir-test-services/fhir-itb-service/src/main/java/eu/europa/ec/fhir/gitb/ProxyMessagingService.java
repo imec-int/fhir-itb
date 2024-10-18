@@ -6,6 +6,7 @@ import com.gitb.ms.*;
 import com.gitb.tr.TAR;
 import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.utils.ITBUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -58,6 +59,7 @@ public class ProxyMessagingService implements MessagingService {
      */
     @Override
     public InitiateResponse initiate(InitiateRequest initiateRequest) {
+        // use built-in initiate implementation
         return new InitiateResponse();
     }
 
@@ -73,16 +75,19 @@ public class ProxyMessagingService implements MessagingService {
     public SendResponse send(SendRequest sendRequest) {
         var sessionId = sendRequest.getSessionId();
         SendResponse response = new SendResponse();
+        var report = new TAR();
+        var reportContext = new AnyContent();
+        report.setContext(reportContext);
+        reportContext.setName("report");
+        reportContext.setType("map");
 
-        var deferredRequest = deferredRequestMapper.get(sessionId);
-        if (deferredRequest.isPresent()) {
-            LOGGER.info("Found deferred request for key [{}]", sessionId);
-            ResponseEntity<String> result = deferredRequest.get().get();
+        var deferredRequestOpt = deferredRequestMapper.get(sessionId);
+        if (deferredRequestOpt.isPresent()) {
+            LOGGER.info("Found deferred request for session [{}]", sessionId);
 
-            LOGGER.info("Deferred Request resolved");
+            ResponseEntity<String> deferredResponse = deferredRequestOpt.get().get();
 
-            var report = ITBUtils.createReport(TestResultType.SUCCESS);
-            var reportContext = report.getContext();
+            report.setResult(TestResultType.SUCCESS);
             reportContext.setName("report");
             reportContext.setType("map");
 
@@ -91,20 +96,24 @@ public class ProxyMessagingService implements MessagingService {
             responseContent.setType("map");
 
             var responseItems = responseContent.getItem();
-            responseItems.add(ITBUtils.createAnyContent("status", result.getStatusCode().toString()));
-            responseItems.add(ITBUtils.createAnyContent("headers", result.getHeaders().toString()));
-            responseItems.add(ITBUtils.createAnyContent("body", Optional.ofNullable(result.getBody()).map(Object::toString).orElse("")));
+            responseItems.add(ITBUtils.createAnyContent("status", deferredResponse.getStatusCode().toString()));
+            responseItems.add(ITBUtils.createAnyContent("headers", deferredResponse.getHeaders().toString()));
+            responseItems.add(ITBUtils.createAnyContent("body", Optional.ofNullable(deferredResponse.getBody()).map(Object::toString).orElse("")));
 
             reportContext.getItem().add(responseContent);
-            response.setReport(report);
         } else {
-            var input = SendInput.fromRequest(sendRequest);
-            RequestResult result = fhirClient.callServer(input.method(), URI.create(input.endpoint()), input.payload(), input.token(), null);
-            var report = ITBUtils.createReport(TestResultType.SUCCESS);
-            ITBUtils.addCommonReportData(report, input.endpoint(), input.payload(), result);
-            response.setReport(report);
+            report.setResult(TestResultType.FAILURE);
+
+            var errorMessage = String.format("No deferred request found for session [%s]", sessionId);
+            LOGGER.warn(errorMessage);
+
+            var responseContent = new AnyContent();
+            responseContent.setName("error");
+            responseContent.setType("string");
+            reportContext.setValue(errorMessage);
         }
 
+        response.setReport(report);
         return response;
     }
 
@@ -122,7 +131,8 @@ public class ProxyMessagingService implements MessagingService {
      */
     @Override
     public Void receive(ReceiveRequest receiveRequest) {
-        return new Void();
+        throw new NotImplementedException("Receive operation is not supported.");
+//        return new Void();
     }
 
     /**
