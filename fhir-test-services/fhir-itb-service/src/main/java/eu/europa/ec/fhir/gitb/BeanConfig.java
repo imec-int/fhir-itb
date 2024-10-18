@@ -20,7 +20,7 @@ public class BeanConfig {
      * @return The endpoint.
      */
     @Bean
-    public EndpointImpl messagingService(Bus cxfBus, MessagingServiceImpl serviceImplementation) {
+    public EndpointImpl messagingService(Bus cxfBus, ProxyMessagingService serviceImplementation) {
         EndpointImpl endpoint = new EndpointImpl(cxfBus, serviceImplementation);
         endpoint.setServiceName(new QName("http://www.gitb.com/ms/v1/", "MessagingServiceService"));
         endpoint.setEndpointName(new QName("http://www.gitb.com/ms/v1/", "MessagingServicePort"));

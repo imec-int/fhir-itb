@@ -3,21 +3,14 @@ package eu.europa.ec.fhir.gitb;
 import com.gitb.core.AnyContent;
 import com.gitb.ms.Void;
 import com.gitb.ms.*;
+import com.gitb.tr.TAR;
 import com.gitb.tr.TestResultType;
-import eu.europa.ec.fhir.handlers.FhirClient;
-import eu.europa.ec.fhir.handlers.RequestResult;
-import eu.europa.ec.fhir.state.ExpectedPost;
-import eu.europa.ec.fhir.state.StateManager;
 import eu.europa.ec.fhir.utils.ITBUtils;
-import jakarta.annotation.Resource;
-import jakarta.xml.ws.WebServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.Optional;
 
 
@@ -25,23 +18,16 @@ import java.util.Optional;
  * Implementation of the GITB messaging API to handle messaging calls.
  */
 @Component
-public class MessagingServiceImpl implements MessagingService {
+public class ProxyMessagingService implements MessagingService {
 
     /**
      * Logger.
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessagingServiceImpl.class);
-
-    @Resource
-    private WebServiceContext wsContext;
-    @Autowired
-    private StateManager stateManager;
-    @Autowired
-    private FhirClient fhirClient;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProxyMessagingService.class);
 
     private final DeferredRequestMapper deferredRequestMapper;
 
-    public MessagingServiceImpl(DeferredRequestMapper deferredRequestMapper) {
+    public ProxyMessagingService(DeferredRequestMapper deferredRequestMapper) {
         this.deferredRequestMapper = deferredRequestMapper;
     }
 
@@ -72,14 +58,6 @@ public class MessagingServiceImpl implements MessagingService {
      */
     @Override
     public InitiateResponse initiate(InitiateRequest initiateRequest) {
-        /*
-         * The session identifier is extracted here from the SOAP headers. In subsequent calls to other operations,
-         * this identifier will be directly included in the calls' parameters.
-         */
-        var sessionId = ITBUtils.getTestSessionIdFromHeaders(wsContext)
-                .orElseThrow();
-        LOGGER.info("Initiating new test session [{}].", sessionId);
-        stateManager.recordSession(sessionId);
         return new InitiateResponse();
     }
 
@@ -144,25 +122,6 @@ public class MessagingServiceImpl implements MessagingService {
      */
     @Override
     public Void receive(ReceiveRequest receiveRequest) {
-        LOGGER.info("Called 'receive' from test session [{}].", receiveRequest.getSessionId());
-        var type = ITBUtils.getRequiredString(receiveRequest.getInput(), "type");
-
-
-        if ("postToValidate".equals(type)) {
-            var expectedPatient = ITBUtils.getRequiredString(receiveRequest.getInput(), "patient");
-            LOGGER.info(String.format("Received patient info (from test case): [{%s}]: ", expectedPatient));
-            stateManager.recordExpectedPost(new ExpectedPost(
-                    receiveRequest.getSessionId(),
-                    // The call ID distinguishes the specific "receive" step that triggered this. This is useful if we have "parallel" receive steps to distinguish between them.
-                    receiveRequest.getCallId(),
-                    // The callback address extracted here will be used later on to notify the Test Bed.
-                    ITBUtils.getReplyToAddressFromHeaders(wsContext)
-                            .orElseThrow(),
-                    expectedPatient
-            ));
-        } else {
-            throw new IllegalArgumentException("Unsupported type [%s] for 'receive' operation.".formatted(type));
-        }
         return new Void();
     }
 
@@ -206,7 +165,6 @@ public class MessagingServiceImpl implements MessagingService {
         var sessionId = finalizeRequest.getSessionId();
         LOGGER.info("Finalising test session [{}].", sessionId);
         deferredRequestMapper.remove(sessionId);
-        stateManager.destroySession(sessionId);
         return new Void();
     }
 

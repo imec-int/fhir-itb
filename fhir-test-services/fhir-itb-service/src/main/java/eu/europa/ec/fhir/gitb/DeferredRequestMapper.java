@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 /**
- * Maps test session IDs to {@link DeferredSupplier}s.
+ * Maps test session IDs to {@link DeferredSupplier}s of {@link ResponseEntity}s.
  */
 @Service
 public class DeferredRequestMapper {
