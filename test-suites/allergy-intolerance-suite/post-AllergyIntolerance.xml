@@ -53,7 +53,7 @@
         <assign to="schemaInfo{schema}">$schema</assign>
 
         <assign to="externalSchemas" append="true">$schemaInfo</assign>
-        <verify handler="http://json-validator:8080/json/soap/any/validation?wsdl" desc="Validate Request Body">
+        <verify handler="$DOMAIN{jsonValidatorServiceAddress}" desc="Validate Request Body">
             <input name="contentToValidate">$request{body}</input>
             <input name="externalSchemas">$externalSchemas</input>
         </verify>
