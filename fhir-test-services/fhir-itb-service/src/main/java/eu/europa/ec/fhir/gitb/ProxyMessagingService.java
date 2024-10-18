@@ -6,7 +6,6 @@ import com.gitb.ms.*;
 import com.gitb.tr.TAR;
 import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.utils.ITBUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -131,8 +130,7 @@ public class ProxyMessagingService implements MessagingService {
      */
     @Override
     public Void receive(ReceiveRequest receiveRequest) {
-        throw new NotImplementedException("Receive operation is not supported.");
-//        return new Void();
+        return new Void();
     }
 
     /**
