@@ -8,7 +8,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -36,7 +39,6 @@ public class FhirProxyController {
     public DeferredResult<ResponseEntity<String>> handleRequest(
             HttpServletRequest request,
             @PathVariable("path") String path,
-            @RequestHeader(value = "Authorization", required = false) String token,
             @RequestBody(required = false) String body
     ) {
         RequestParams proxyRequestParams = fhirProxyService.getFhirHttpParams(request, path, body);
@@ -63,7 +65,7 @@ public class FhirProxyController {
                         .toEntity(String.class);
             } catch (Exception e) {
                 LOGGER.warn("Failed to proxy request: {}", e.getMessage());
-                return ResponseEntity.status(500).body("Failed to proxy request");
+                return ResponseEntity.status(502).body("Failed to proxy request");
             }
         });
 
