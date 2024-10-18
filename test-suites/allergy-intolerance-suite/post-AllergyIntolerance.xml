@@ -61,7 +61,7 @@
         <!-- Use the HttpMessagingV2 handler to send ordinary HTTP requests. -->
         <send id="httpSend" from="client" to="server" handler="HttpMessagingV2">
             <input name="uri">
-                "https://webhook.site/a76f3805-4023-48a4-8cad-73f57db67a43/test"
+                "https://webhook.site/b8f30bd9-c04d-4f9c-83da-29924080fd95/test"
             </input>
             <input name="method">"POST"</input>
         </send>
