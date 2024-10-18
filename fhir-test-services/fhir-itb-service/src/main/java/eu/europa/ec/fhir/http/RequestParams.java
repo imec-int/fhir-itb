@@ -8,7 +8,7 @@ import java.net.URI;
 /**
  * The required parameters for an HTTP request.
  */
-public record HttpParams(
+public record RequestParams(
         URI uri,
         HttpMethod method,
         HttpHeaders headers,

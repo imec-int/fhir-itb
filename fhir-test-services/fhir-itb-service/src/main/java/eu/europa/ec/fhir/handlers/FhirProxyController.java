@@ -2,7 +2,7 @@ package eu.europa.ec.fhir.handlers;
 
 import eu.europa.ec.fhir.gitb.DeferredRequestMapper;
 import eu.europa.ec.fhir.gitb.api.model.StartSessionRequestPayload;
-import eu.europa.ec.fhir.http.HttpParams;
+import eu.europa.ec.fhir.http.RequestParams;
 import eu.europa.ec.fhir.proxy.DeferredSupplier;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ public class FhirProxyController {
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestBody(required = false) String body
     ) {
-        HttpParams proxyRequestParams = fhirProxyService.getFhirHttpParams(request, path, body);
+        RequestParams proxyRequestParams = fhirProxyService.getFhirHttpParams(request, path, body);
         String testId = String.format("%s%s", proxyRequestParams.method().toString().toLowerCase(), path.replace("/", "-"));
 
         LOGGER.debug("Starting test session(s) for \"{}\"", testId);

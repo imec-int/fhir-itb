@@ -1,7 +1,7 @@
 package eu.europa.ec.fhir.handlers;
 
-import eu.europa.ec.fhir.http.HttpParams;
 import eu.europa.ec.fhir.http.HttpUtils;
+import eu.europa.ec.fhir.http.RequestParams;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +32,8 @@ public class FhirProxyService {
         }
     }
 
-    public HttpParams getFhirHttpParams(HttpServletRequest request, String path, String body) {
-        return new HttpParams(
+    public RequestParams getFhirHttpParams(HttpServletRequest request, String path, String body) {
+        return new RequestParams(
                 buildFhirURI(request, fhirProxyEndpoint, path),
                 HttpMethod.valueOf(request.getMethod()),
                 HttpUtils.cloneHeaders(request),
