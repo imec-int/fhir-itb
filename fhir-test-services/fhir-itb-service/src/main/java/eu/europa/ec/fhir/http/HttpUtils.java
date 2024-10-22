@@ -3,8 +3,6 @@ package eu.europa.ec.fhir.http;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 
-import java.io.IOException;
-import java.net.http.HttpRequest;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -22,7 +20,7 @@ public final class HttpUtils {
     }
 
     /**
-     * Returns a new HttpHeaders object with the same headers from the given deferredRequest.
+     * Copies the Headers from the given HttpServletRequest into a new HttpHeaders object.
      */
     public static HttpHeaders cloneHeaders(HttpServletRequest fromRequest) {
         HttpHeaders headers = new HttpHeaders();
@@ -31,7 +29,7 @@ public final class HttpUtils {
     }
 
     /**
-     * Copies the headers of the given deferredRequest into the given HttpHeaders object.
+     * Copies the headers of the given HttpServletRequest into the given HttpHeaders object.
      * This method does not remove any existing headers in the given HttpHeaders object.
      * Existing headers will be overwritten.
      */
@@ -47,17 +45,8 @@ public final class HttpUtils {
                 });
     }
 
-    public static HttpRequest.BodyPublisher getBodyPublisher(HttpServletRequest request) {
-        try {
-            var inputStream = request.getInputStream();
-            return HttpRequest.BodyPublishers.ofInputStream(() -> inputStream);
-        } catch (IOException e) {
-            return HttpRequest.BodyPublishers.noBody();
-        }
-    }
-
     /**
-     * Return the query string of the deferredRequest, including the leading '?'.
+     * Return the query string of the HttpServletRequest, including the leading '?'.
      */
     public static Optional<String> getQueryString(HttpServletRequest request) {
         return Optional.ofNullable(request.getQueryString())
