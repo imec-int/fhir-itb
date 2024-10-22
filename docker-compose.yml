@@ -13,6 +13,7 @@ services:
     # Internal component used to store users' UI sessions.
     image: redis:7.0.14
     restart: unless-stopped
+
   gitb-mysql:
     # The Test Bed's DB.
     image: isaitb/gitb-mysql:latest
@@ -25,6 +26,7 @@ services:
       test: "/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute \"SHOW DATABASES;\""
       interval: 3s
       retries: 10
+
   gitb-srv:
     # The test engine that executes the test sessions.
     # Note that this (and the gitb-ui container) point to the "nightly" tag which receives updates based on our
@@ -38,6 +40,7 @@ services:
       # example you would add a port mapping for port 8080 (this is currently not mapped to the host) and then
       # refer to an address such as "localhost".
       - gitb.messaging.callbackURL=http://gitb-srv:8080/itbsrv/MessagingClient
+
   gitb-ui:
     # The Test Bed's UI.
     image: isaitb/gitb-ui:nightly
@@ -64,13 +67,14 @@ services:
         condition: service_healthy
       gitb-srv:
         condition: service_started
+
   #
   # Test Bed core components - END.
   #
   fhir-test-services:
     # The fhir-test-services component are the extension services supporting our test cases. Note how we have a "build" definition
     # here as we will build the component from the sources provided in directory "./fhir-test-services".
-    # For the endpoints exposed by this service check thge project's README.
+    # For the endpoints exposed by this service check the project's README.
     build:
       context: ./fhir-test-services
     restart: unless-stopped
@@ -78,15 +82,6 @@ services:
       - "9002:8181"
     volumes:
       - ./fhir-test-services/resources:/app/resources
-
-  json-validator:
-    image: isaitb/json-validator
-    restart: unless-stopped
-    environment:
-      - validator.channels=soap_api
-      - validator.supportUserInterfaceEmbedding=false
-    ports:
-      - "9004:8080"
 
   fhir-server:
     # This is the internal FHIR server that is used by the Test Bed to validate FHIR client test cases. It has no host port mappings

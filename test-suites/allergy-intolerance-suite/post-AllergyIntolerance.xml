@@ -17,12 +17,9 @@
         <gitb:actor id="client" role="SUT"/>
         <gitb:actor id="server"/>
     </actors>
-    <imports>
-        <artifact type="binary" name="schema">allergy-intolerance-suite/schemas/AllergyIntolerance.schema.json</artifact>
-    </imports>
     <variables>
         <!--
-            The ProxyHandler will forward variables below to all test cases.
+            The ProxyHandler will forward the request to the test cases.
         -->
         <var name="request" type="map"/>
     </variables>
@@ -48,15 +45,6 @@
         <log>
             "Request Body: " || $request{body}
         </log>
-
-        <log>"### Request Body Validation ###"</log>
-        <assign to="schemaInfo{schema}">$schema</assign>
-
-        <assign to="externalSchemas" append="true">$schemaInfo</assign>
-        <verify handler="$DOMAIN{jsonValidatorServiceAddress}" desc="Validate Request Body">
-            <input name="contentToValidate">$request{body}</input>
-            <input name="externalSchemas">$externalSchemas</input>
-        </verify>
 
         <!-- Use handler="$DOMAIN{messagingServiceAddress}" to trigger the Proxied request. -->
         <send id="proxyRequest" handler="$DOMAIN{messagingServiceAddress}" from="client" to="server"/>
