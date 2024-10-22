@@ -85,9 +85,9 @@ services:
     profiles:
       - demo
 
+  # Local instance of a FHIR server for testing purposes.
+  # Point the test services' proxy to this server's endpoint.
   fhir-server:
-    # This is the internal FHIR server that is used by the Test Bed to validate FHIR client test cases. It has no host port mappings
-    # as this is only expected to be used by the test engine directly.
     image: costateixeira/hapistarter:2.0.0
     restart: unless-stopped
     environment:
