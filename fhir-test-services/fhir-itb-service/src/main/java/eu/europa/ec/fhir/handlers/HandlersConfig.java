@@ -1,5 +1,6 @@
 package eu.europa.ec.fhir.handlers;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -15,14 +16,17 @@ public class HandlersConfig {
         return HttpClient.newHttpClient();
     }
 
+    @Value("${itb.vendor.api_key}")
+    private String ORG_API_KEY;
+
+    @Value("${itb.base_url}")
+    private String BASE_URL;
+
     @Bean
     ItbRestClient itbRestClient() {
-        // TODO: load values from config
-        var baseUrl = "http://localhost:9000/api/rest";
-
         var restClient = RestClient.builder()
-                .baseUrl(baseUrl)
-                .defaultHeader("ITB_API_KEY", "FC2C742FX2585X4FE8X9982X200350CDC523")
+                .baseUrl(BASE_URL + "/api/rest")
+                .defaultHeader("ITB_API_KEY", ORG_API_KEY)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
                 .build();
 
