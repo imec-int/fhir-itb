@@ -46,19 +46,25 @@
             "Request Body: " || $request{body}
         </log>
 
-        <!-- Use handler="$DOMAIN{messagingServiceAddress}" to trigger the Proxied request. -->
-        <send id="proxyRequest" handler="$DOMAIN{messagingServiceAddress}" from="client" to="server"/>
+        <!-- Use handler="$DOMAIN{messagingServiceAddress}" to trigger the Proxied request and get the response. -->
+        <send id="proxyResponse" handler="$DOMAIN{messagingServiceAddress}" from="client" to="server"/>
         <log>"### Proxy Response Data ###"</log>
-        <log>$proxyRequest{response}</log>
+        <log>$proxyResponse{response}</log>
         <log>
-            "Proxy Response status: " || $proxyRequest{response}{status}
+            "Proxy Response status: " || $proxyResponse{response}{status}
         </log>
         <log>
-            "Proxy Response headers: " || $proxyRequest{response}{headers}
+            "Proxy Response headers: " || $proxyResponse{response}{headers}
         </log>
         <log>
-            "Proxy Response body: " || $proxyRequest{response}{body}
+            "Proxy Response body: " || $proxyResponse{response}{body}
         </log>
+
+        <!-- Validate Status Code -->
+        <verify handler="StringValidator">
+            <input name="actualstring">$proxyResponse{response}{status}</input>
+            <input name="expectedstring">"201 CREATED"</input>
+        </verify>
 
         <!-- Use the HttpMessagingV2 handler to send ordinary HTTP requests. -->
         <send id="httpSend" from="client" to="server" handler="HttpMessagingV2">
