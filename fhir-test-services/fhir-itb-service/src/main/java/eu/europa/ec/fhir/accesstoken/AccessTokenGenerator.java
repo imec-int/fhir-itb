@@ -115,10 +115,11 @@ public class AccessTokenGenerator {
         return value;
     }
 
-    private record Config(String certificateFilePath,
-                          String certificatePassword, String clientId,
-                          String accessTokenUrl) {
-    }
+    private record Config(
+            String certificateFilePath,
+            String certificatePassword, String clientId,
+            String accessTokenUrl
+    ) {}
 
     private Config loadConfig(File configFilePath) {
         Properties properties = new Properties();
