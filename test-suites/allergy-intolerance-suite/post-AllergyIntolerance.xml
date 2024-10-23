@@ -44,19 +44,43 @@
             "Request Body: " || $request{body}
         </log>
 
-        <!-- Extract the allergy ID from the JSON request body -->
-        <process handler="JSONPointerProcessor" output="allergyId">
+        <!-- Extract json properties and verify expected values for them... -->
+
+        <process handler="JSONPointerProcessor" output="resourceType">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/resourceType"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify Resource Type">
+            <input name="actualstring">$resourceType</input>
+            <input name="expectedstring">"AllergyIntolerance"</input>
+        </verify>
+
+        <process handler="JSONPointerProcessor" output="allergyCode">
             <input name="content">$request{body}</input>
             <input name="pointer">"/code/coding/0/code"</input>
         </process>
 
-        <assign to="peanutAllergyId">"762952008"</assign>
-        <verify id="verifyAllergyId" handler="StringValidator" desc="Verify Peanut Allergy ID">
-            <input name="actualstring">$allergyId</input>
-            <input name="expectedstring">$peanutAllergyId</input>
+        <assign to="peanutAllergyCode">"762952008"</assign>
+        <verify handler="StringValidator" desc="Verify Peanut Allergy code">
+            <input name="actualstring">$allergyCode</input>
+            <input name="expectedstring">$peanutAllergyCode</input>
         </verify>
 
-        <verify id="payloadValidation" handler="$DOMAIN{fhirResourceValidator}" desc="Payload validation">
+        <process handler="JSONPointerProcessor" output="reactionCode">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/reaction/manifestation/0/coding/code"</input>
+        </process>
+
+        <assign to="asthmaReactionCode">"762952008"</assign>
+        <verify handler="StringValidator" desc="Verify asthma reaction code">
+            <input name="actualstring">$reactionCode</input>
+            <input name="expectedstring">$asthmaReactionCode</input>
+        </verify>
+
+
+        <!-- validate using a FHIR Server $validate endpoint (configurable endpoint) -->
+        <verify handler="$DOMAIN{fhirResourceValidator}" desc="Payload validation">
             <input name="resource">"AllergyIntolerance"</input>
             <input name="payload">$request{body}</input>
         </verify>
@@ -84,9 +108,9 @@
         <!-- Use the HttpMessagingV2 handler to send ordinary HTTP requests. -->
         <send id="httpSend" from="client" to="server" handler="HttpMessagingV2">
             <input name="uri">
-                "https://webhook.site/b8f30bd9-c04d-4f9c-83da-29924080fd95/test"
+                "https://echo.free.beeceptor.com/"
             </input>
-            <input name="method">"POST"</input>
+            <input name="method">"GET"</input>
         </send>
         <log>"### HttpMessagingV2 ###"</log>
         <log>$httpSend{response}</log>
