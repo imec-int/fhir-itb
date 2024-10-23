@@ -72,7 +72,7 @@
             <input name="pointer">"/reaction/manifestation/0/coding/code"</input>
         </process>
 
-        <assign to="asthmaReactionCode">"762952008"</assign>
+        <assign to="asthmaReactionCode">"195967001"</assign>
         <verify handler="StringValidator" desc="Verify asthma reaction code">
             <input name="actualstring">$reactionCode</input>
             <input name="expectedstring">$asthmaReactionCode</input>
