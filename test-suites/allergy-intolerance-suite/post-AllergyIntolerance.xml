@@ -44,16 +44,21 @@
             "Request Body: " || $request{body}
         </log>
 
-        <!-- Extract patient ID from the JSON request body -->
-        <process handler="JSONPointerProcessor" output="patientID">
+        <!-- Extract the allergy ID from the JSON request body -->
+        <process handler="JSONPointerProcessor" output="allergyId">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/patient/identifier/value"</input>
+            <input name="pointer">"/code/coding/0/code"</input>
         </process>
 
-        <!-- validate the patientID -->
-        <verify handler="StringValidator">
-            <input name="actualstring">$patientID</input>
-            <input name="expectedstring">"1234567890"</input>
+        <assign to="peanutAllergyId">"762952008"</assign>
+        <verify id="verifyAllergyId" handler="StringValidator" desc="Verify Peanut Allergy ID">
+            <input name="actualstring">$allergyId</input>
+            <input name="expectedstring">$peanutAllergyId</input>
+        </verify>
+
+        <verify id="payloadValidation" handler="$DOMAIN{fhirResourceValidator}" desc="Payload validation">
+            <input name="resource">"AllergyIntolerance"</input>
+            <input name="payload">$request{body}</input>
         </verify>
 
         <!-- Use handler="$DOMAIN{proxyHandler}" to trigger the Proxied request and get the response. -->

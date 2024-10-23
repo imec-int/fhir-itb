@@ -15,7 +15,7 @@ import javax.xml.namespace.QName;
 public class BeanConfig {
 
     /**
-     * The proxy messaging service endpoint.
+     * The FHIR proxy messaging service endpoint.
      *
      * @return The endpoint.
      */
@@ -29,16 +29,16 @@ public class BeanConfig {
     }
 
     /**
-     * The validation service endpoint.
+     * The FHIR resource validation service endpoint.
      *
      * @return The endpoint.
      */
     @Bean
-    public EndpointImpl validationService(Bus cxfBus, ValidationServiceImpl serviceImplementation) {
+    public EndpointImpl validationService(Bus cxfBus, FhirResourceValidationService serviceImplementation) {
         EndpointImpl endpoint = new EndpointImpl(cxfBus, serviceImplementation);
         endpoint.setServiceName(new QName("http://www.gitb.com/vs/v1/", "ValidationService"));
         endpoint.setEndpointName(new QName("http://www.gitb.com/vs/v1/", "ValidationServicePort"));
-        endpoint.publish("/validation");
+        endpoint.publish("/validation/fhir");
         return endpoint;
     }
 

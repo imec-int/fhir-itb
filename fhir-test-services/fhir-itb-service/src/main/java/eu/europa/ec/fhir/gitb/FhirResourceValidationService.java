@@ -9,37 +9,49 @@ import com.gitb.tr.ObjectFactory;
 import com.gitb.tr.*;
 import com.gitb.vs.Void;
 import com.gitb.vs.*;
-import eu.europa.ec.fhir.handlers.FhirClient;
-import eu.europa.ec.fhir.handlers.RequestResult;
 import eu.europa.ec.fhir.utils.ITBUtils;
 import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.ws.WebServiceContext;
+import jakarta.xml.ws.WebServiceException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 import java.math.BigInteger;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Implementation of the GITB validation API to handle validation calls.
+ * Implementation of the GITB validation API to handle FHIR Resource Validation.
  */
 @Component
-public class ValidationServiceImpl implements ValidationService {
+public class FhirResourceValidationService implements ValidationService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ValidationServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FhirResourceValidationService.class);
+
+    @Value("${fhir.validation.endpoint}")
+    private String fhirValidationEndpoint;
+
+    @Value("${fhir.contentTypeFull}")
+    private String fhirContentType;
 
     @Autowired
-    private FhirClient fhirClient;
+    RestClient restClient;
+
+    @Autowired
+    private DeferredRequestMapper deferredRequests;
+
     @Autowired
     private TestBedNotifier testBedNotifier;
     @Autowired
@@ -63,6 +75,10 @@ public class ValidationServiceImpl implements ValidationService {
 
     /**
      * Validate the provided inputs and produce a validation report.
+     * <p>
+     * To handle the validation we delegate to the configured FHIR server by making a
+     * validation POST and retrieving the report.
+     * Alternatively, this could be replaced by a call to the FHIR validator as a Java library.
      *
      * @param validateRequest The inputs to validate.
      * @return The response.
@@ -70,25 +86,52 @@ public class ValidationServiceImpl implements ValidationService {
     @Override
     public ValidationResponse validate(ValidateRequest validateRequest) {
         ValidationResponse response = new ValidationResponse();
-        String endpoint = ITBUtils.getRequiredString(validateRequest.getInput(), "endpoint");
+        String resourceType = ITBUtils.getRequiredString(validateRequest.getInput(), "resource");
         String payload = ITBUtils.getRequiredString(validateRequest.getInput(), "payload");
-        /*
-         * To handle the validation we delegate to our internal FHIR server instance by making a
-         * validation POST and retrieving the report. Alternatively this could be replaced by a call to the FHIR
-         * validator as a Java library.
-         */
-        RequestResult result = fhirClient.callServer(HttpMethod.POST, URI.create(endpoint), payload, null, null);
-        if (result.status() != HttpStatus.OK.value()) {
-            // The validation call resulted in a failure.
-            response.setReport(ITBUtils.createReport(TestResultType.FAILURE));
-            // Log a message for the test session.
-            testBedNotifier.sendLogMessage(validateRequest.getSessionId(), ITBUtils.getReplyToAddressFromHeaders(wsContext)
-                    .orElseThrow(), "Validation call to FHIR server failed.", LogLevel.ERROR);
-        } else {
-            // Convert the FHIR server's validation report to a TAR validation report expected by the Test Bed.
-            TAR report = convertToTestBedReport(validateRequest.getSessionId(), payload, result.body());
-            response.setReport(report);
+        URI uri = URI.create(String.format("%s/%s/$validate", fhirValidationEndpoint, resourceType));
+        String sessionId = validateRequest.getSessionId();
+
+        var deferredRequest = deferredRequests.get(sessionId);
+
+        if (deferredRequest.isPresent()) {
+            var requestParams = deferredRequest.get().getRequestParams();
+            try {
+                var result = restClient.method(HttpMethod.POST)
+                        .uri(uri)
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                Objects.requireNonNull(requestParams.headers().get(HttpHeaders.AUTHORIZATION))
+                                        .toArray(new String[0])
+                        )
+                        .contentType(MediaType.valueOf(fhirContentType))
+                        .body(payload)
+                        .retrieve()
+                        .body(String.class);
+
+                // Convert the FHIR server's validation report to a TAR validation report expected by the Test Bed.
+                TAR report = convertToTestBedReport(validateRequest.getSessionId(), payload, result);
+                response.setReport(report);
+            } catch (Exception requestException) {
+                // The validation call resulted in a failure.
+                response.setReport(ITBUtils.createReport(TestResultType.FAILURE));
+                var addr = ITBUtils.getReplyToAddressFromHeaders(wsContext);
+
+                if (addr.isPresent()) {
+                    try {
+                        testBedNotifier.sendLogMessage(
+                                sessionId,
+                                addr.get(),
+                                "Validation call to FHIR server failed.",
+                                LogLevel.ERROR);
+                    } catch (WebServiceException logMessageException) {
+                        LOG.warn("Error while sending log message to Test Bed for session [{}]", sessionId, logMessageException);
+                    }
+                } else {
+                    LOG.warn("Missing \"reply-to\" address in validation service request headers.");
+                }
+            }
         }
+
         return response;
     }
 

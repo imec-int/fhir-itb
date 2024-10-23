@@ -7,6 +7,7 @@ import com.gitb.ms.NotifyForMessageRequest;
 import com.gitb.tr.TAR;
 import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.utils.ITBUtils;
+import jakarta.xml.ws.WebServiceException;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +37,7 @@ public class TestBedNotifier {
      * @param level           The severity level.
      */
     @Async
-    public void sendLogMessage(String sessionId, String callbackAddress, String message, LogLevel level) {
+    public void sendLogMessage(String sessionId, String callbackAddress, String message, LogLevel level) throws WebServiceException {
         var logRequest = new LogRequest();
         logRequest.setSessionId(sessionId);
         logRequest.setMessage(message);

@@ -119,4 +119,4 @@ services:
     ports:
       - 9003:8080
     profiles:
-      - demo
+      - dev
