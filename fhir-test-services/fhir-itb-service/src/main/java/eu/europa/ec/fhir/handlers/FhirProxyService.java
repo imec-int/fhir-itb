@@ -20,9 +20,9 @@ public class FhirProxyService {
     @Value("${fhir.proxy.endpoint}")
     private String fhirProxyEndpoint;
 
-    private URI buildFhirURI(HttpServletRequest request, String baseUrl, String resource) {
+    private URI buildFhirURI(HttpServletRequest request, String baseUrl, String path) {
         String queryString = HttpUtils.getQueryString(request).orElse("");
-        String uriString = String.format("%s/%s%s", baseUrl, resource, queryString);
+        String uriString = String.format("%s/%s%s", baseUrl, path, queryString);
 
         try {
             return new URL(uriString).toURI();

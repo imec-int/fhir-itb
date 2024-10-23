@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.context.request.async.DeferredResult;
 
+import java.util.Optional;
+
 /**
  * Triggers test runs based on request parameters.
  */
@@ -35,14 +37,17 @@ public class FhirProxyController {
         this.restClient = restClient;
     }
 
-    @RequestMapping({"/proxy/{resource}", "/proxy/{resource}/{*rest}"})
+    @RequestMapping({"/proxy/{resourceType}", "/proxy/{resourceType}/{id}"})
     public DeferredResult<ResponseEntity<String>> handleRequest(
             HttpServletRequest request,
-            @PathVariable("resource") String resource,
+            @PathVariable("resourceType") String resourceType,
+            @PathVariable(value = "id", required = false) Optional<String> resourceId,
             @RequestBody(required = false) String body
     ) {
-        RequestParams proxyRequestParams = fhirProxyService.getFhirHttpParams(request, resource, body);
-        String testId = String.format("%s-%s", proxyRequestParams.method().toString().toLowerCase(), resource.replace("/", "-"));
+        var fullPath = String.format("%s%s", resourceType, resourceId.map(value -> "/" + value).orElse(""));
+        RequestParams proxyRequestParams = fhirProxyService.getFhirHttpParams(request, fullPath, body);
+
+        String testId = String.format("%s-%s", proxyRequestParams.method().toString().toLowerCase(), resourceType.replace("/", ""));
 
         LOGGER.debug("Starting test session(s) for \"{}\"", testId);
 
