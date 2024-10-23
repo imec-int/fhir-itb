@@ -7,11 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.context.request.async.DeferredResult;
 
-import java.util.function.Supplier;
-
 /**
  * Represents a deferred HTTP Request that is linked to a {@link DeferredResult}.
- * Call 'resolve' to perform the request and set the result of the {@link DeferredResult}.
+ * Call {@link #resolve()} to perform the request and set the result of the {@link DeferredResult}.
  */
 public class DeferredRequest {
 
@@ -32,21 +30,27 @@ public class DeferredRequest {
     }
 
     /**
-     * Calls the {@link Supplier} and sets the result of the {@link DeferredResult}.
-     * If the result has already been set, the result is returned without calling the supplier.
-     * Throws an {@link IllegalStateException} if the result has expired.
+     * If the result has already been set, the existing result is returned.
+     * If not, then it performs the request and sets the result of the {@link DeferredResult}.
+     * Throws an {@link IllegalStateException} if the result is expired.
      */
     public ResponseEntity<String> resolve() throws IllegalStateException {
         if (deferredResult.isSetOrExpired()) {
             if (deferredResult.hasResult()) {
                 return (ResponseEntity<String>) deferredResult.getResult();
             }
-            // the result has expired so we should avoid calling the supplier
-            // to avoid unexpected side effects
+            // the result has expired so we don't performing the request
+            // to avoid side effects
             throw new IllegalStateException("Deferred result has expired.");
         }
 
-        // proxy the request
+        return sendRequest();
+    }
+
+    /**
+     * Actually performs the request and sets the result of the {@link DeferredResult}.
+     */
+    private ResponseEntity<String> sendRequest() {
         var spec = restClient
                 .method(requestParams.method())
                 .uri(requestParams.uri())

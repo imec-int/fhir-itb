@@ -1,14 +1,13 @@
 package eu.europa.ec.fhir.gitb;
 
 import eu.europa.ec.fhir.proxy.DeferredRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Optional;
 
 /**
- * Maps test session IDs to {@link DeferredRequest}s of {@link ResponseEntity}s.
+ * Maps test session IDs to {@link DeferredRequest}s.
  */
 @Service
 public class DeferredRequestMapper {
