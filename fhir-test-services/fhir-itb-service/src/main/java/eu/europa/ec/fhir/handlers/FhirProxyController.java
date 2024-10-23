@@ -70,7 +70,7 @@ public class FhirProxyController {
                         .toEntity(String.class);
             } catch (Exception e) {
                 LOGGER.warn("Failed to proxy request: {}", e.getMessage());
-                return ResponseEntity.status(502).body("Failed to proxy request");
+                return ResponseEntity.status(500).body("Failed to proxy request");
             }
         });
 
