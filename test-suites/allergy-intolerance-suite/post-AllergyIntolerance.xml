@@ -58,23 +58,23 @@
             <input name="expectedstring">"1234567890"</input>
         </verify>
 
-        <!-- Use handler="$DOMAIN{messagingServiceAddress}" to trigger the Proxied request and get the response. -->
-        <send id="proxyResponse" handler="$DOMAIN{messagingServiceAddress}" from="client" to="server"/>
+        <!-- Use handler="$DOMAIN{proxyHandler}" to trigger the Proxied request and get the response. -->
+        <send id="proxyRequest" handler="$DOMAIN{proxyHandler}" from="client" to="server"/>
         <log>"### Proxy Response Data ###"</log>
-        <log>$proxyResponse{response}</log>
+        <log>$proxyRequest{response}</log>
         <log>
-            "Proxy Response status: " || $proxyResponse{response}{status}
+            "Proxy Response status: " || $proxyRequest{response}{status}
         </log>
         <log>
-            "Proxy Response headers: " || $proxyResponse{response}{headers}
+            "Proxy Response headers: " || $proxyRequest{response}{headers}
         </log>
         <log>
-            "Proxy Response body: " || $proxyResponse{response}{body}
+            "Proxy Response body: " || $proxyRequest{response}{body}
         </log>
 
         <!-- Validate Status Code -->
         <verify handler="StringValidator">
-            <input name="actualstring">$proxyResponse{response}{status}</input>
+            <input name="actualstring">$proxyRequest{response}{status}</input>
             <input name="expectedstring">"201 CREATED"</input>
         </verify>
 

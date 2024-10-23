@@ -15,7 +15,7 @@ import javax.xml.namespace.QName;
 public class BeanConfig {
 
     /**
-     * The messaging service endpoint.
+     * The proxy messaging service endpoint.
      *
      * @return The endpoint.
      */
@@ -24,7 +24,7 @@ public class BeanConfig {
         EndpointImpl endpoint = new EndpointImpl(cxfBus, serviceImplementation);
         endpoint.setServiceName(new QName("http://www.gitb.com/ms/v1/", "MessagingServiceService"));
         endpoint.setEndpointName(new QName("http://www.gitb.com/ms/v1/", "MessagingServicePort"));
-        endpoint.publish("/messaging");
+        endpoint.publish("/messaging/proxy");
         return endpoint;
     }
 
