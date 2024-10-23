@@ -78,7 +78,6 @@
             <input name="expectedstring">$asthmaReactionCode</input>
         </verify>
 
-
         <!-- validate using a FHIR Server $validate endpoint (configurable endpoint) -->
         <verify handler="$DOMAIN{fhirResourceValidator}" desc="Payload validation">
             <input name="resource">"AllergyIntolerance"</input>
@@ -100,7 +99,7 @@
         </log>
 
         <!-- Validate Status Code -->
-        <verify handler="StringValidator">
+        <verify handler="StringValidator" desc="Verify response status code">
             <input name="actualstring">$proxyRequest{response}{status}</input>
             <input name="expectedstring">"201 CREATED"</input>
         </verify>
