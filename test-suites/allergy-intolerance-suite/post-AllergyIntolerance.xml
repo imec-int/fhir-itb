@@ -47,7 +47,7 @@
         </log>
 
         <!-- Extract patient ID from the JSON request body -->
-        <process handler="JSONPointerProcessor" operation="process" output="patientID">
+        <process handler="JSONPointerProcessor" output="patientID">
             <input name="content">$request{body}</input>
             <input name="pointer">"/patient/identifier/value"</input>
         </process>
