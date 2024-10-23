@@ -2,11 +2,9 @@
           xmlns:gitb="http://www.gitb.com/core/v1/"
 >
     <metadata>
-        <gitb:name>Test case 1: Submit allergy intolerances</gitb:name>
+        <gitb:name>Test case 1: Submit an allergy intolerance</gitb:name>
         <gitb:version>1.0</gitb:version>
-        <gitb:description>The FHIR client submits a specific allergy
-            intolerance to a FHIR server.
-        </gitb:description>
+        <gitb:description>The FHIR client submits a specific allergy intolerance to a FHIR server.</gitb:description>
         <!-- See here how we refer to a HTML block that will be added as documentation for the test case. -->
         <!--        <gitb:documentation import="docs/client/test-case-1.html"/>-->
     </metadata>

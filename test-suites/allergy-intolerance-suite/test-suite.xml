@@ -41,4 +41,5 @@
     -->
 
     <testcase id="post-AllergyIntolerance"/>
+    <testcase id="get-AllergyIntolerance"/>
 </testsuite>

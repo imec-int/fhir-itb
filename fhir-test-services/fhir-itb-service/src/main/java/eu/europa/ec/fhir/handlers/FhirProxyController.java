@@ -35,14 +35,14 @@ public class FhirProxyController {
         this.restClient = restClient;
     }
 
-    @RequestMapping(value = "/proxy/{*path}")
+    @RequestMapping({"/proxy/{resource}", "/proxy/{resource}/{*rest}"})
     public DeferredResult<ResponseEntity<String>> handleRequest(
             HttpServletRequest request,
-            @PathVariable("path") String path,
+            @PathVariable("resource") String resource,
             @RequestBody(required = false) String body
     ) {
-        RequestParams proxyRequestParams = fhirProxyService.getFhirHttpParams(request, path, body);
-        String testId = String.format("%s%s", proxyRequestParams.method().toString().toLowerCase(), path.replace("/", "-"));
+        RequestParams proxyRequestParams = fhirProxyService.getFhirHttpParams(request, resource, body);
+        String testId = String.format("%s-%s", proxyRequestParams.method().toString().toLowerCase(), resource.replace("/", "-"));
 
         LOGGER.debug("Starting test session(s) for \"{}\"", testId);
 
