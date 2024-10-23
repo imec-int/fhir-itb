@@ -3,7 +3,7 @@ package eu.europa.ec.fhir.handlers;
 import eu.europa.ec.fhir.gitb.DeferredRequestMapper;
 import eu.europa.ec.fhir.gitb.api.model.StartSessionRequestPayload;
 import eu.europa.ec.fhir.http.RequestParams;
-import eu.europa.ec.fhir.proxy.DeferredSupplier;
+import eu.europa.ec.fhir.proxy.DeferredRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,13 +28,11 @@ public class FhirProxyController {
     private final ItbRestClient itbRestClient;
     private final FhirProxyService fhirProxyService;
     private final DeferredRequestMapper deferredRequests;
-    private final RestClient restClient;
 
     public FhirProxyController(ItbRestClient itbRestClient, FhirProxyService fhirProxyService, DeferredRequestMapper deferredRequests, RestClient restClient) {
         this.itbRestClient = itbRestClient;
         this.fhirProxyService = fhirProxyService;
         this.deferredRequests = deferredRequests;
-        this.restClient = restClient;
     }
 
     @RequestMapping({"/proxy/{resourceType}", "/proxy/{resourceType}/{id}"})
@@ -52,27 +50,7 @@ public class FhirProxyController {
         LOGGER.debug("Starting test session(s) for \"{}\"", testId);
 
         var deferredResult = new DeferredResult<ResponseEntity<String>>();
-        var deferredRequest = new DeferredSupplier<>(deferredResult, () -> {
-            // proxy the request
-            var spec = restClient
-                    .method(proxyRequestParams.method())
-                    .uri(proxyRequestParams.uri())
-                    .headers(headers -> headers.addAll(proxyRequestParams.headers()));
-
-            if (proxyRequestParams.body() != null) {
-                spec.body(proxyRequestParams.body());
-            }
-
-            try {
-                return spec.retrieve()
-                        // don't care about the result, just forward the response
-                        .onStatus(status -> true, (req, res) -> {})
-                        .toEntity(String.class);
-            } catch (Exception e) {
-                LOGGER.warn("Failed to proxy request: {}", e.getMessage());
-                return ResponseEntity.status(500).body("Failed to proxy request");
-            }
-        });
+        var deferredRequest = new DeferredRequest(proxyRequestParams, deferredResult);
 
         try {
             // start test sessions and defer the request
@@ -85,7 +63,7 @@ public class FhirProxyController {
             deferredRequests.put(sessionId, deferredRequest);
         } catch (Exception e) {
             LOGGER.warn("Failed to start test session(s): {}", e.getMessage());
-            deferredRequest.get();
+            deferredRequest.resolve();
         }
 
         return deferredResult;

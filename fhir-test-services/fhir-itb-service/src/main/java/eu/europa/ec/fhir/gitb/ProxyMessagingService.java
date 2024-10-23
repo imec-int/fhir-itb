@@ -84,7 +84,7 @@ public class ProxyMessagingService implements MessagingService {
         if (deferredRequestOpt.isPresent()) {
             LOGGER.info("Found deferred request for session [{}]", sessionId);
 
-            ResponseEntity<String> deferredResponse = deferredRequestOpt.get().get();
+            ResponseEntity<String> deferredResponse = deferredRequestOpt.get().resolve();
 
             report.setResult(TestResultType.SUCCESS);
             reportContext.setName("report");
