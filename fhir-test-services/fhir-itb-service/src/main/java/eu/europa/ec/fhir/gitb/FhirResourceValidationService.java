@@ -13,7 +13,6 @@ import eu.europa.ec.fhir.utils.ITBUtils;
 import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.ws.WebServiceContext;
-import jakarta.xml.ws.WebServiceException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,8 +122,8 @@ public class FhirResourceValidationService implements ValidationService {
                                 addr.get(),
                                 "Validation call to FHIR server failed.",
                                 LogLevel.ERROR);
-                    } catch (WebServiceException logMessageException) {
-                        LOG.warn("Error while sending log message to Test Bed for session [{}]", sessionId, logMessageException);
+                    } catch (Exception logException) {
+                        LOG.warn("Error while sending log message to Test Bed for session [{}]", sessionId, logException);
                     }
                 } else {
                     LOG.warn("Missing \"reply-to\" address in validation service request headers.");
