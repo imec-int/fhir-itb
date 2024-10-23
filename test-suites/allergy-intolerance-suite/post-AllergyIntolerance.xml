@@ -46,6 +46,18 @@
             "Request Body: " || $request{body}
         </log>
 
+        <!-- Extract patient ID from the JSON request body -->
+        <process handler="JSONPointerProcessor" operation="process" output="patientID">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/patient/identifier/value"</input>
+        </process>
+
+        <!-- validate the patientID -->
+        <verify handler="StringValidator">
+            <input name="actualstring">$patientID</input>
+            <input name="expectedstring">"1234567890"</input>
+        </verify>
+
         <!-- Use handler="$DOMAIN{messagingServiceAddress}" to trigger the Proxied request and get the response. -->
         <send id="proxyResponse" handler="$DOMAIN{messagingServiceAddress}" from="client" to="server"/>
         <log>"### Proxy Response Data ###"</log>
