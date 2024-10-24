@@ -1,0 +1,118 @@
+version: '3.9'
+
+# These volumes record all persistent data for the Test Bed instance.
+volumes:
+  gitb-repo:
+  gitb-dbdata:
+
+services:
+  #
+  # Test Bed core components - START.
+  #
+  gitb-redis:
+    # Internal component used to store users' UI sessions.
+    image: redis:7.0.14
+    restart: unless-stopped
+
+  gitb-mysql:
+    # The Test Bed's DB.
+    image: isaitb/gitb-mysql:latest
+    restart: unless-stopped
+    volumes:
+      - gitb-dbdata:/var/lib/mysql
+    # We use a healthcheck to make sure the DB is up and running before we try to connect to it (this could
+    # take a few seconds after the container is up and running).
+    healthcheck:
+      test: "/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute \"SHOW DATABASES;\""
+      interval: 3s
+      retries: 10
+
+  gitb-srv:
+    # The test engine that executes the test sessions.
+    # Note that this (and the gitb-ui container) point to the "nightly" tag which receives updates based on our
+    # development branch. In production this would be "latest" or a fixed release tag.
+    image: isaitb/gitb-srv:nightly
+    restart: unless-stopped
+    environment:
+      # This is used to define how external services (the fhir-test-services component) will make callbacks on the
+      # test engine. The address here must be what the fhir-test-services component should use for the calls.
+      # If you deploy the fhir-test-services outside the docker-compose service you would need to adapt this. For
+      # example you would add a port mapping for port 8080 (this is currently not mapped to the host) and then
+      # refer to an address such as "localhost".
+      - gitb.messaging.callbackURL=http://gitb-srv:8080/itbsrv/MessagingClient
+
+  gitb-ui:
+    # The Test Bed's UI.
+    image: isaitb/gitb-ui:nightly
+    restart: unless-stopped
+    # This is the only Test Bed component for which we currently add a host port mapping. If port 9000 on your
+    # host is taken just replace "9000:9000" with say "9001:9000".
+    ports:
+      - "9000:9000"
+    environment:
+      # This is the key to decrypt the initialisation data archive (see below).
+      - DATA_ARCHIVE_KEY=fhir
+      # Flag to enable the Test Bed's REST API. This can be very useful for efficient test case development.
+      - AUTOMATION_API_ENABLED=true
+      # Activate the generic GITB theme.
+      - THEME=fhir
+    volumes:
+      - gitb-repo:/gitb-repository
+      # This points to the folder from which the initialisation data archive specific to the PoC will be loaded from.
+      - ./config/data/:/gitb-repository/data/in/:rw
+    depends_on:
+      gitb-redis:
+        condition: service_started
+      gitb-mysql:
+        condition: service_healthy
+      gitb-srv:
+        condition: service_started
+
+  #
+  # Test Bed core components - END.
+  #
+  fhir-test-services:
+    # The fhir-test-services component are the extension services supporting our test cases. Note how we have a "build" definition
+    # here as we will build the component from the sources provided in directory "./fhir-test-services".
+    # For the endpoints exposed by this service check the project's README.
+    build:
+      context: ./fhir-test-services
+    restart: unless-stopped
+    environment:
+      - fhir.proxy.endpoint=https://apps-acpt.vitalink-services.be/vault/api/r4
+    ports:
+      - "9002:8181"
+    volumes:
+      - ./fhir-test-services/resources:/app/resources
+
+  # Local instance of a FHIR server for testing purposes.
+  # Point the test services' proxy to this server's endpoint.
+  fhir-server:
+    image: costateixeira/hapistarter:2.0.0
+    restart: unless-stopped
+    environment:
+      - ig_url=https://ehealth.fgov.be/standards/fhir/allergy/
+      - ig_code=allergy
+      - ig_package_name=hl7.fhir.be.allergy
+      - ig_version=1.2.0
+      - fhir_version=R4
+      - server_port=8080
+      - static_server_port=8080
+      - server_name=AllergyTB
+      - hapi.fhir.allow_multiple_delete=true
+      - hapi.fhir.server_address=localhost:8080
+      - hapi.fhir.reuse_cached_search_results_millis=-1
+      - hapi.fhir.cors.allow_Credentials=true
+      - hapi.fhir.cors.allowed_origin_patterns="http:localhost:*"
+      - hapi.fhir.implementationguides.fhir_r4_core.name=hl7.fhir.r4.core
+      - hapi.fhir.implementationguides.fhir_r4_core.version=4.0.1
+      - hapi.fhir.implementationguides.fhir_r4_core.url=http://hl7.org/fhir/R4/hl7.fhir.r4.core.tgz
+      - hapi.fhir.implementationguides.currentig.name=hl7.fhir.be.allergy
+      - hapi.fhir.implementationguides.currentig.version=1.2.0
+      - hapi.fhir.implementationguides.currentig.url=https://ehealth.fgov.be/standards/fhir/allergy/
+      - hapi.fhir.ig_runtime_upload_enabled=true
+      - hapi.fhir.custom_content_path=/custom
+      - hapi.fhir.app_content_path=/apps
+    volumes:
+      - ./config/fhir/custom:/custom
+      - ./config/fhir/apps:/apps
