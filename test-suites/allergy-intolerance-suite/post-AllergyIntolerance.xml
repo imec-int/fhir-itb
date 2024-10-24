@@ -78,12 +78,6 @@
             <input name="expectedstring">$asthmaReactionCode</input>
         </verify>
 
-<!--        &lt;!&ndash; validate using a FHIR Server "$validate" endpoint (configurable endpoint) &ndash;&gt;-->
-<!--        <verify handler="$DOMAIN{fhirResourceValidator}" desc="Payload validation">-->
-<!--            <input name="resource">"AllergyIntolerance"</input>-->
-<!--            <input name="payload">$request{body}</input>-->
-<!--        </verify>-->
-
         <!-- Use handler="$DOMAIN{proxyHandler}" to trigger the Proxied request and get the response. -->
         <send id="proxyRequest" handler="$DOMAIN{proxyHandler}" from="client" to="server"/>
         <log>"### Proxy Response Data ###"</log>
