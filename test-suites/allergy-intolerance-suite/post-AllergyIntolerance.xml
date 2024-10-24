@@ -69,7 +69,7 @@
 
         <process handler="JSONPointerProcessor" output="reactionCode">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/reaction/manifestation/0/coding/code"</input>
+            <input name="pointer">"/reaction/0/manifestation/0/coding/0/code"</input>
         </process>
 
         <assign to="asthmaReactionCode">"195967001"</assign>
@@ -78,7 +78,7 @@
             <input name="expectedstring">$asthmaReactionCode</input>
         </verify>
 
-        <!-- validate using a FHIR Server $validate endpoint (configurable endpoint) -->
+        <!-- validate using a FHIR Server "$validate" endpoint (configurable endpoint) -->
         <verify handler="$DOMAIN{fhirResourceValidator}" desc="Payload validation">
             <input name="resource">"AllergyIntolerance"</input>
             <input name="payload">$request{body}</input>
