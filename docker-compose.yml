@@ -78,12 +78,12 @@ services:
     build:
       context: ./fhir-test-services
     restart: unless-stopped
+    environment:
+      - fhir.proxy.endpoint=https://apps-acpt.vitalink-services.be/vault/api/r4
     ports:
       - "9002:8181"
     volumes:
       - ./fhir-test-services/resources:/app/resources
-    profiles:
-      - demo
 
   # Local instance of a FHIR server for testing purposes.
   # Point the test services' proxy to this server's endpoint.
@@ -116,7 +116,3 @@ services:
     volumes:
       - ./config/fhir/custom:/custom
       - ./config/fhir/apps:/apps
-    ports:
-      - 9003:8080
-    profiles:
-      - dev
