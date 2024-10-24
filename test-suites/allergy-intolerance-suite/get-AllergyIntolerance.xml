@@ -30,5 +30,13 @@
             <input name="actualstring">$proxyRequest{response}{status}</input>
             <input name="expectedstring">"200 OK"</input>
         </verify>
+
+        <process handler="RegExpProcessor" output="resourceId" operation="collect">
+            <input name="input">$request{uri}</input>
+            <input name="expression">"/([^/]*)$"</input>
+        </process>
+
+        <log>"Resource ID: " || $resourceId</log>
+
     </steps>
 </testcase>
