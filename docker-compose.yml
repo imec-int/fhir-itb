@@ -4,6 +4,10 @@ volumes:
   gitb-repo:
   gitb-dbdata:
 
+networks:
+  gitb:
+  test-services:
+
 services:
   gitb-redis:
     image: redis:7.0.14
@@ -12,7 +16,7 @@ services:
       - gitb
 
   gitb-mysql:
-    image: isaitb/gitb-mysql:1.24.1
+    image: isaitb/gitb-mysql:1.24.0
     restart: unless-stopped
     networks:
       - gitb
@@ -24,15 +28,16 @@ services:
       retries: 20
 
   gitb-srv:
-    image: isaitb/gitb-srv:1.24.1
+    image: isaitb/gitb-srv:1.24.0
     restart: unless-stopped
     networks:
       - gitb
+      - test-services
     environment:
       - gitb.messaging.callbackURL=http://gitb-srv:8080/itbsrv/MessagingClient
 
   gitb-ui:
-    image: isaitb/gitb-ui:1.24.1
+    image: isaitb/gitb-ui:1.24.0
     restart: unless-stopped
     networks:
       - gitb
@@ -60,9 +65,9 @@ services:
     networks:
       - test-services
     environment:
-      - itb.base.url=http://gitb-ui:9000
+      - itb.base_url=http://gitb-ui:9000
       - fhir.proxy.endpoint=https://apps-acpt.vitalink-services.be/vault/api/r4
     ports:
-      - "9002:8181"
+      - "8181:8181"
     volumes:
       - ./fhir-test-services/resources:/app/resources
