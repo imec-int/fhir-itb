@@ -79,6 +79,7 @@ services:
       context: ./fhir-test-services
     restart: unless-stopped
     environment:
+      - itb.base_url=http://gitb-ui:9000
       - fhir.proxy.endpoint=https://apps-acpt.vitalink-services.be/vault/api/r4
     ports:
       - "8181:8181"
