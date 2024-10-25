@@ -1,6 +1,6 @@
 # Introduction
 
-andThis project implements the supporting test services for the FHIR conformance testing. Currently, this provides an
+This project implements the supporting test services for the FHIR conformance testing. Currently, this provides an
 implementation of a GITB messaging and validation services.
 
 The pseudonymization service can be found in the `be.smals.vas.integration.helper` package under `fhir-pseudo-service`
@@ -48,7 +48,7 @@ The following prerequisites are required:
    b. Standalone: `java -jar ./target/fhir-itb-service.jar`.
 3. The services are available at:
    a. For the proxy messaging service: http://localhost:8181/fhir/services/messaging/proxy?wsdl  
-   b. For the validation service: http://localhost:8181/fhir/services/validation?wsdl
+   b. For the validation service: http://localhost:8181/fhir/services/validation/fhir?wsdl
 4. For receiving calls from FHIR clients, the proxy services are exposed as follows:
    a. POST: http://localhost:8181/fhir/server/api/* (for
    example http://localhost:8181/fhir/server/api/AllergyIntolerance)
