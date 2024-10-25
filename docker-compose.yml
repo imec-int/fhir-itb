@@ -76,7 +76,8 @@ services:
     # here as we will build the component from the sources provided in directory "./fhir-test-services".
     # For the endpoints exposed by this service check the project's README.
     build:
-      context: ./fhir-test-services
+      context: .
+      dockerfile: dist/itb-fhir-test-services/Dockerfile
     restart: unless-stopped
     environment:
       - itb.base_url=http://gitb-ui:9000
@@ -85,6 +86,8 @@ services:
       - "8181:8181"
     volumes:
       - ./fhir-test-services/resources:/app/resources
+    profiles:
+      - full
 
   # Local instance of a FHIR server for testing purposes.
   # Point the test services' proxy to this server's endpoint.

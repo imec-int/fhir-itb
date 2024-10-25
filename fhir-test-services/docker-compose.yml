@@ -1,9 +1,0 @@
-version: '2.1'
-
-services:
-  fhir-test-services:
-    build:
-      context: .
-    restart: unless-stopped
-    volumes:
-      - ./resources:/app/resources

@@ -2,7 +2,7 @@
 FROM maven:3.9.2-amazoncorretto-17 AS builder
 
 WORKDIR /app
-COPY . /app
+COPY fhir-test-services /app
 RUN mvn clean install -DskipTests=true
 
 

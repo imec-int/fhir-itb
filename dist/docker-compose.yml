@@ -31,7 +31,7 @@ services:
       - gitb.messaging.callbackURL=http://gitb-srv:8080/itbsrv/MessagingClient
 
   gitb-ui:
-    image: jungst46/gitb-ui-fhir-sandbox:1.24.0
+    image: jungst46/gitb-ui-fhir-sandbox:latest
     restart: unless-stopped
     networks:
       - gitb
