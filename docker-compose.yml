@@ -81,7 +81,7 @@ services:
     environment:
       - fhir.proxy.endpoint=https://apps-acpt.vitalink-services.be/vault/api/r4
     ports:
-      - "9002:8181"
+      - "8181:8181"
     volumes:
       - ./fhir-test-services/resources:/app/resources
 
