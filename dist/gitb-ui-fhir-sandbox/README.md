@@ -9,6 +9,21 @@ The image is [publicly available in Docker Hub](https://hub.docker.com/r/jungst4
 > If changes are made to the gitb configuration or a new version of gitb-ui is used, we must
 > build and publish a new version of this image.
 
+# Sandbox Configuration
+
+The GITB Sandbox environment comes pre-configured with everything we need to run tests against FHIR servers and clients.
+
+## Users
+
+Currently, there are three users configured.
+
++ admin@itb: The root admin user.
+    + Password: `Admin.123!`
++ vendor_admin: The admin user for the "vendor" organization.
+    + Password: `Fhir_Admin.123!`
++ vendor_user: The test user for the "vendor" organization.
+    + Password: `Fhir.123!`
+
 # Building
 
 To build the image, follow the steps below:
