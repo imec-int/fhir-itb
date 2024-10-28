@@ -11,7 +11,7 @@ import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.gitb.TestBedNotifier;
 import eu.europa.ec.fhir.handlers.FhirClient;
 import eu.europa.ec.fhir.handlers.RequestResult;
-import eu.europa.ec.fhir.utils.Utils;
+import eu.europa.ec.fhir.utils.ITBUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Component used to manage the ongoing state of test sessions.
@@ -36,8 +41,6 @@ public class StateManager {
     private TestBedNotifier testBedNotifier;
     @Autowired
     private ObjectMapper objectMapper;
-    @Autowired
-    private Utils utils;
     @Autowired
     private FhirClient fhirClient;
 
@@ -125,12 +128,12 @@ public class StateManager {
     /**
      * Construct the final URI to use for calling our internal FHIR server.
      *
-     * @param base The base URI.
+     * @param base          The base URI.
      * @param pathExtension The extension.
      * @return The full URI to use.
      */
-    private String constructUri(String base, String pathExtension) {
-        return StringUtils.appendIfMissing(base, "/") + StringUtils.removeStart(pathExtension, "/");
+    private URI constructUri(String base, String pathExtension) {
+        return URI.create(StringUtils.appendIfMissing(base, "/") + StringUtils.removeStart(pathExtension, "/"));
     }
 
     /**
@@ -162,7 +165,7 @@ public class StateManager {
      * patient and then use her reference to distinguish between concurrent test sessions.
      *
      * @param pathExtension The path extension following the base endpoint.
-     * @param body The POST's body.
+     * @param body          The POST's body.
      * @return The response to return to the caller.
      */
     public Optional<RequestResult> handleReceivedPost(String pathExtension, String body) {
@@ -170,19 +173,21 @@ public class StateManager {
         if (fhirServerEndpoint != null) {
             Optional<String> patient = extractPatient(body);
             if (patient.isPresent()) {
-                body = utils.prettyPrintJson(body);
+                body = ITBUtils.prettyPrintJson(body);
                 // Call embedded FHIR server.
-                RequestResult serverResult = fhirClient.callServer(HttpMethod.POST, constructUri(fhirServerEndpoint, pathExtension), body,null,null);
+                RequestResult serverResult = fhirClient.callServer(HttpMethod.POST, constructUri(fhirServerEndpoint, pathExtension), body, null, null);
                 result = Optional.of(serverResult);
                 // Check to see if any test sessions were expecting the call.
                 synchronized (lock) {
                     boolean pendingSessionFound = false;
-                    for (var sessionEntry: testSessions.entrySet()) {
-                        List<ExpectedPost> expectedPosts = (List<ExpectedPost>) sessionEntry.getValue().get(POST_TO_VALIDATE);
+                    for (var sessionEntry : testSessions.entrySet()) {
+                        List<ExpectedPost> expectedPosts = (List<ExpectedPost>) sessionEntry.getValue()
+                                .get(POST_TO_VALIDATE);
                         if (expectedPosts != null) {
                             int index = 0;
-                            for (var expectedPost: expectedPosts) {
-                                if (expectedPost.patient().equals(patient.get())) {
+                            for (var expectedPost : expectedPosts) {
+                                if (expectedPost.patient()
+                                        .equals(patient.get())) {
                                     // Found a pending test session.
                                     pendingSessionFound = true;
                                     // Signal to the Test Bed that the expected POST is completed so that the relevant test session continues.
@@ -219,23 +224,23 @@ public class StateManager {
      * Complete an expected POST for a patient by creating the relevant report and reporting back to the Test Bed.
      *
      * @param expectedPost The expected POST's information.
-     * @param payload The received payload.
-     * @param result The result of the call once forwarded to our internal FHIR server.
+     * @param payload      The received payload.
+     * @param result       The result of the call once forwarded to our internal FHIR server.
      */
     private void completeExpectedPost(ExpectedPost expectedPost, String payload, RequestResult result) {
-        TAR report = utils.createReport(TestResultType.SUCCESS);
-        utils.addCommonReportData(report, null, payload, result);
+        TAR report = ITBUtils.createReport(TestResultType.SUCCESS);
+        ITBUtils.addCommonReportData(report, null, payload, result);
         testBedNotifier.notifyTestBed(expectedPost.testSessionId(), expectedPost.callId(), expectedPost.callbackAddress(), report);
     }
 
     /**
      * Add an entry to the test session log.
      *
-     * @param sessionId The test session to log this for.
+     * @param sessionId       The test session to log this for.
      * @param callbackAddress The callback address on which log entries are to be signalled (this matches the messaging
      *                        callback address).
-     * @param level The log level.
-     * @param message The message.
+     * @param level           The log level.
+     * @param message         The message.
      */
     private void addToSessionLog(String sessionId, String callbackAddress, LogLevel level, String message) {
         // Log first in our own log.

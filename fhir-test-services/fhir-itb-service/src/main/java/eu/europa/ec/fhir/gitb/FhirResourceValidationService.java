@@ -9,9 +9,7 @@ import com.gitb.tr.ObjectFactory;
 import com.gitb.tr.*;
 import com.gitb.vs.Void;
 import com.gitb.vs.*;
-import eu.europa.ec.fhir.handlers.FhirClient;
-import eu.europa.ec.fhir.handlers.RequestResult;
-import eu.europa.ec.fhir.utils.Utils;
+import eu.europa.ec.fhir.utils.ITBUtils;
 import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.ws.WebServiceContext;
@@ -19,28 +17,40 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Implementation of the GITB validation API to handle validation calls.
+ * Implementation of the GITB validation API to handle FHIR Resource Validation.
  */
 @Component
-public class ValidationServiceImpl implements ValidationService {
+public class FhirResourceValidationService implements ValidationService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ValidationServiceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FhirResourceValidationService.class);
+
+    @Value("${fhir.validation.endpoint}")
+    private String fhirValidationEndpoint;
+
+    @Value("${fhir.contentTypeFull}")
+    private String fhirContentType;
 
     @Autowired
-    private Utils utils;
+    RestClient restClient;
+
     @Autowired
-    private FhirClient fhirClient;
+    private DeferredRequestMapper deferredRequests;
+
     @Autowired
     private TestBedNotifier testBedNotifier;
     @Autowired
@@ -64,6 +74,10 @@ public class ValidationServiceImpl implements ValidationService {
 
     /**
      * Validate the provided inputs and produce a validation report.
+     * <p>
+     * To handle the validation we delegate to the configured FHIR server by making a
+     * validation POST and retrieving the report.
+     * Alternatively, this could be replaced by a call to the FHIR validator as a Java library.
      *
      * @param validateRequest The inputs to validate.
      * @return The response.
@@ -71,40 +85,72 @@ public class ValidationServiceImpl implements ValidationService {
     @Override
     public ValidationResponse validate(ValidateRequest validateRequest) {
         ValidationResponse response = new ValidationResponse();
-        String endpoint = utils.getRequiredString(validateRequest.getInput(), "endpoint");
-        String payload = utils.getRequiredString(validateRequest.getInput(), "payload");
-        /*
-         * To handle the validation we delegate to our internal FHIR server instance by making a
-         * validation POST and retrieving the report. Alternatively this could be replaced by a call to the FHIR
-         * validator as a Java library.
-         */
-        RequestResult result = fhirClient.callServer(HttpMethod.POST, endpoint, payload,null,null);
-        if (result.status() != HttpStatus.OK.value()) {
-            // The validation call resulted in a failure.
-            response.setReport(utils.createReport(TestResultType.FAILURE));
-            // Log a message for the test session.
-            testBedNotifier.sendLogMessage(validateRequest.getSessionId(), utils.getReplyToAddressFromHeaders(wsContext).orElseThrow(), "Validation call to FHIR server failed.", LogLevel.ERROR);
-        } else {
-            // Convert the FHIR server's validation report to a TAR validation report expected by the Test Bed.
-            TAR report = convertToTestBedReport(validateRequest.getSessionId(), payload, result.body());
-            response.setReport(report);
+        String resourceType = ITBUtils.getRequiredString(validateRequest.getInput(), "resource");
+        String payload = ITBUtils.getRequiredString(validateRequest.getInput(), "payload");
+        URI uri = URI.create(String.format("%s/%s/$validate", fhirValidationEndpoint, resourceType));
+        String sessionId = validateRequest.getSessionId();
+
+        var deferredRequest = deferredRequests.get(sessionId);
+
+        if (deferredRequest.isPresent()) {
+            var requestParams = deferredRequest.get().getRequestParams();
+            try {
+                var result = restClient.method(HttpMethod.POST)
+                        .uri(uri)
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                Objects.requireNonNull(requestParams.headers().get(HttpHeaders.AUTHORIZATION))
+                                        .toArray(new String[0])
+                        )
+                        .contentType(MediaType.valueOf(fhirContentType))
+                        .body(payload)
+                        .retrieve()
+                        .body(String.class);
+
+                // Convert the FHIR server's validation report to a TAR validation report expected by the Test Bed.
+                TAR report = convertToTestBedReport(validateRequest.getSessionId(), payload, result);
+                response.setReport(report);
+            } catch (Exception requestException) {
+                // The validation call resulted in a failure.
+                response.setReport(ITBUtils.createReport(TestResultType.FAILURE));
+                var addr = ITBUtils.getReplyToAddressFromHeaders(wsContext);
+
+                if (addr.isPresent()) {
+                    try {
+                        testBedNotifier.sendLogMessage(
+                                sessionId,
+                                addr.get(),
+                                "Validation call to FHIR server failed.",
+                                LogLevel.ERROR);
+                    } catch (Exception logException) {
+                        LOG.warn("Error while sending log message to Test Bed for session [{}]", sessionId, logException);
+                    }
+                } else {
+                    LOG.warn("Missing \"reply-to\" address in validation service request headers.");
+                }
+            }
         }
+
         return response;
     }
 
     /**
      * Convert the FHIR server's validation report to a TAR validation report expected by the Test Bed.
      *
-     * @param testSessionId The test session ID (used only for logging).
-     * @param validationRequest The validation request (to be placed in the report's context).
+     * @param testSessionId      The test session ID (used only for logging).
+     * @param validationRequest  The validation request (to be placed in the report's context).
      * @param validationResponse The response produced by the internal FHIR server.
      * @return The TAR validation report.
      */
     private TAR convertToTestBedReport(String testSessionId, String validationRequest, String validationResponse) {
-        TAR report = utils.createReport(TestResultType.SUCCESS);
+        TAR report = ITBUtils.createReport(TestResultType.SUCCESS);
         // Add the validated input and produced "raw" validation reports as context items.
-        report.getContext().getItem().add(utils.createAnyContentSimple("input", validationRequest, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
-        report.getContext().getItem().add(utils.createAnyContentSimple("report", validationResponse, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
+        report.getContext()
+                .getItem()
+                .add(ITBUtils.createAnyContent("input", validationRequest, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
+        report.getContext()
+                .getItem()
+                .add(ITBUtils.createAnyContent("report", validationResponse, ValueEmbeddingEnumeration.STRING, MediaType.APPLICATION_JSON_VALUE));
         // Parse the reported issues to convert them to report items.
         try {
             var root = objectMapper.readTree(validationResponse);
@@ -126,7 +172,7 @@ public class ValidationServiceImpl implements ValidationService {
                             /*
                              * You can set line numbers on report items, referring also to the name of the report context item
                              * that corresponds to the relevant content ("input" in this case). Apart from including this
-                             * in XML and PDF reports, this allows the Test Bed's UI to pop up the specific content and
+                             * in XML and PDF reports, this allows the Test Bed's UI to remove up the specific content and
                              * location when the item in question is clicked.
                              */
                             var lineNumber = getLineNumber(issue);
@@ -143,11 +189,16 @@ public class ValidationServiceImpl implements ValidationService {
                 }
                 report.getReports().getInfoOrWarningOrError().addAll(errors);
                 report.getReports().getInfoOrWarningOrError().addAll(warnings);
-                report.getReports().getInfoOrWarningOrError().addAll(infoMessages);
+                report.getReports()
+                        .getInfoOrWarningOrError()
+                        .addAll(infoMessages);
                 report.setCounters(new ValidationCounters());
-                report.getCounters().setNrOfErrors(BigInteger.valueOf(errors.size()));
-                report.getCounters().setNrOfWarnings(BigInteger.valueOf(warnings.size()));
-                report.getCounters().setNrOfAssertions(BigInteger.valueOf(infoMessages.size()));
+                report.getCounters()
+                        .setNrOfErrors(BigInteger.valueOf(errors.size()));
+                report.getCounters()
+                        .setNrOfWarnings(BigInteger.valueOf(warnings.size()));
+                report.getCounters()
+                        .setNrOfAssertions(BigInteger.valueOf(infoMessages.size()));
                 if (!errors.isEmpty()) {
                     report.setResult(TestResultType.FAILURE);
                 } else if (!warnings.isEmpty()) {
@@ -156,8 +207,9 @@ public class ValidationServiceImpl implements ValidationService {
             }
         } catch (JsonProcessingException e) {
             LOG.error("Unable to parse FHIR server validation response.", e);
-            testBedNotifier.sendLogMessage(testSessionId, utils.getReplyToAddressFromHeaders(wsContext).orElseThrow(), "Unable to parse FHIR server validation response.", LogLevel.ERROR);
-            report = utils.createReport(TestResultType.FAILURE);
+            testBedNotifier.sendLogMessage(testSessionId, ITBUtils.getReplyToAddressFromHeaders(wsContext)
+                    .orElseThrow(), "Unable to parse FHIR server validation response.", LogLevel.ERROR);
+            report = ITBUtils.createReport(TestResultType.FAILURE);
         }
         return report;
     }
@@ -165,7 +217,7 @@ public class ValidationServiceImpl implements ValidationService {
     /**
      * Get the text node child under the provided issue node.
      *
-     * @param issue The issue node.
+     * @param issue    The issue node.
      * @param nodeName The name of the child.
      * @return The child's text (if defined).
      */
@@ -188,7 +240,8 @@ public class ValidationServiceImpl implements ValidationService {
         if (!extensions.isMissingNode() && extensions.isArray()) {
             for (int i = 0; i < extensions.size(); i++) {
                 var extension = extensions.get(0);
-                if ("http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line".equals(extension.get("url").asText())) {
+                if ("http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line".equals(extension.get("url")
+                        .asText())) {
                     return Optional.of(extension.get("valueInteger").asInt());
                 }
             }

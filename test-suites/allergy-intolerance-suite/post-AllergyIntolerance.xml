@@ -1,0 +1,130 @@
+<testcase id="post-AllergyIntolerance" xmlns="http://www.gitb.com/tdl/v1/"
+          xmlns:gitb="http://www.gitb.com/core/v1/"
+>
+    <metadata>
+        <gitb:name>Test case 1: Submit an allergy intolerance</gitb:name>
+        <gitb:version>1.0</gitb:version>
+        <gitb:description>The FHIR client submits a specific allergy intolerance to a FHIR server.</gitb:description>
+        <!-- See here how we refer to a HTML block that will be added as documentation for the test case. -->
+        <!--        <gitb:documentation import="docs/client/test-case-1.html"/>-->
+    </metadata>
+    <actors>
+        <!--
+            The Actor IDs need to match those in the test suite and in the test engine. One of these needs to always be the SUT (System Under Test).
+        -->
+        <gitb:actor id="client" role="SUT"/>
+        <gitb:actor id="server"/>
+    </actors>
+    <variables>
+        <!--
+            The ProxyHandler will forward the request to the test cases.
+        -->
+        <var name="request" type="map"/>
+    </variables>
+    <!--
+        Setting "stopOnError" to true will stop the test session as soon as an error is encountered. By default, test sessions will continue regardless of errors.
+    -->
+    <steps stopOnError="false">
+        <log>'Started session '||$SESSION{sessionId}||' for test case
+            '||$SESSION{testCaseId}||''
+        </log>
+        <!-- Log the received request parameters -->
+        <log>"### Proxy Request Data ###"</log>
+        <log>$request</log>
+        <log>
+            "Request URI: " || $request{uri}
+        </log>
+        <log>
+            "Request Method: " || $request{method}
+        </log>
+        <log>
+            "Request Headers: " || $request{headers}
+        </log>
+        <log>
+            "Request Body: " || $request{body}
+        </log>
+
+        <!-- Extract json properties and verify expected values for them... -->
+
+        <process handler="JSONPointerProcessor" output="resourceType">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/resourceType"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify Resource Type">
+            <input name="actualstring">$resourceType</input>
+            <input name="expectedstring">"AllergyIntolerance"</input>
+        </verify>
+
+        <process handler="JSONPointerProcessor" output="allergyCode">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/code/coding/0/code"</input>
+        </process>
+
+        <assign to="peanutAllergyCode">"762952008"</assign>
+        <verify handler="StringValidator" desc="Verify Peanut Allergy code">
+            <input name="actualstring">$allergyCode</input>
+            <input name="expectedstring">$peanutAllergyCode</input>
+        </verify>
+
+        <process handler="JSONPointerProcessor" output="reactionCode">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/reaction/0/manifestation/0/coding/0/code"</input>
+        </process>
+
+        <assign to="asthmaReactionCode">"195967001"</assign>
+        <verify handler="StringValidator" desc="Verify asthma reaction code">
+            <input name="actualstring">$reactionCode</input>
+            <input name="expectedstring">$asthmaReactionCode</input>
+        </verify>
+
+        <!-- Use handler="$DOMAIN{proxyHandler}" to trigger the Proxied request and get the response. -->
+        <send id="proxyRequest" handler="$DOMAIN{proxyHandler}" from="client" to="server"/>
+        <log>"### Proxy Response Data ###"</log>
+        <log>$proxyRequest{response}</log>
+        <log>
+            "Proxy Response status: " || $proxyRequest{response}{status}
+        </log>
+        <log>
+            "Proxy Response headers: " || $proxyRequest{response}{headers}
+        </log>
+        <log>
+            "Proxy Response body: " || $proxyRequest{response}{body}
+        </log>
+
+        <!-- Validate Status Code -->
+        <verify handler="StringValidator" desc="Verify response status code">
+            <input name="actualstring">$proxyRequest{response}{status}</input>
+            <input name="expectedstring">"201 CREATED"</input>
+        </verify>
+
+        <process handler="JSONPointerProcessor" output="resourceType">
+            <input name="content">$proxyRequest{response}{body}</input>
+            <input name="pointer">"/resourceType"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify Response Resource Type">
+            <input name="actualstring">$resourceType</input>
+            <input name="expectedstring">"AllergyIntolerance"</input>
+        </verify>
+
+        <!-- Use the HttpMessagingV2 handler to send ordinary HTTP requests. -->
+        <send id="httpSend" from="client" to="server" handler="HttpMessagingV2">
+            <input name="uri">
+                "https://echo.free.beeceptor.com/"
+            </input>
+            <input name="method">"GET"</input>
+        </send>
+        <log>"### HttpMessagingV2 ###"</log>
+        <log>$httpSend{response}</log>
+    </steps>
+    <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
+    <output>
+        <success>
+            <default>"Test case passed successfully."</default>
+        </success>
+        <failure>
+            <default>"Test case failed."</default>
+        </failure>
+    </output>
+</testcase>

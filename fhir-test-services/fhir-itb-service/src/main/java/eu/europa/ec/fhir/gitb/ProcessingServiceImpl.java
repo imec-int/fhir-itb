@@ -1,18 +1,19 @@
 package eu.europa.ec.fhir.gitb;
 
+import com.gitb.core.ValueEmbeddingEnumeration;
 import com.gitb.ps.Void;
 import com.gitb.ps.*;
 import com.gitb.tr.TestResultType;
+import eu.europa.ec.fhir.accesstoken.AccessTokenGenerator;
+import eu.europa.ec.fhir.handlers.KarateHandler;
+import eu.europa.ec.fhir.handlers.PseudonymizationHandler;
 import eu.europa.ec.fhir.state.StateManager;
-import eu.europa.ec.fhir.utils.Utils;
+import eu.europa.ec.fhir.utils.ITBUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import eu.europa.ec.fhir.handlers.PseudonymizationHandler;
-import eu.europa.ec.fhir.handlers.KarateHandler;
-import com.gitb.core.ValueEmbeddingEnumeration;
-import eu.europa.ec.fhir.accesstoken.AccessTokenGenerator;
+
 import java.io.File;
 import java.util.Map;
 
@@ -24,10 +25,11 @@ public class ProcessingServiceImpl implements ProcessingService {
 
     @Autowired
     private StateManager stateManager;
-    @Autowired
-    private Utils utils;
-    /** Logger. */
-    private static final Logger LOG = LoggerFactory.getLogger(MessagingServiceImpl.class);
+
+    /**
+     * Logger.
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(ProcessingServiceImpl.class);
 
     @Override
     public GetModuleDefinitionResponse getModuleDefinition(Void aVoid) {
@@ -48,55 +50,59 @@ public class ProcessingServiceImpl implements ProcessingService {
         String operation = processRequest.getOperation();
         var response = new ProcessResponse();
         if ("init".equals(operation)) {
-            stateManager.recordConfiguration(utils.getRequiredString(processRequest.getInput(), "endpoint"));
+            stateManager.recordConfiguration(ITBUtils.getRequiredString(processRequest.getInput(), "endpoint"));
         }
         if ("pseudonymisation".equals(operation)) {
             // Get the expected inputs.
-            var ssin = utils.getRequiredString(processRequest.getInput(), "SSIN");
-            var configFilePath = utils.getRequiredString(processRequest.getInput(), "configFilePath");
+            var ssin = ITBUtils.getRequiredString(processRequest.getInput(), "SSIN");
+            var configFilePath = ITBUtils.getRequiredString(processRequest.getInput(), "configFilePath");
             //var configFilePath = "resources/config.properties";
-            LOG.info(String.format("Received SSIN info (from test case): [%s]" , ssin));
+            LOG.info(String.format("Received SSIN info (from test case): [%s]", ssin));
             LOG.info(String.format("Received config file path (from test case): [%s].", configFilePath));
             String pseudominizedPatient;
             // call pseudominization handler to generate pseudonym
             if (!ssin.isBlank()) {
                 LOG.info(String.format("Pseudonymisation operation started for SSIN number: [%s].", ssin));
-                pseudominizedPatient =  new PseudonymizationHandler().pseudoGenerator(configFilePath, ssin);
+                pseudominizedPatient = new PseudonymizationHandler().pseudoGenerator(configFilePath, ssin);
             } else {
                 LOG.info("Pseudonymisation operation started for default SSIN number from the configuration file");
-                pseudominizedPatient =  new PseudonymizationHandler().pseudoGenerator(configFilePath, ssin);
+                pseudominizedPatient = new PseudonymizationHandler().pseudoGenerator(configFilePath, ssin);
             }
 
             // Produce the resulting report.
-            response.getOutput().add(utils.createAnyContentSimple("result",pseudominizedPatient, ValueEmbeddingEnumeration.STRING));
+            response.getOutput()
+                    .add(ITBUtils.createAnyContent("result", pseudominizedPatient, ValueEmbeddingEnumeration.STRING));
         }
 
         if ("authentication".equals(operation)) {
             // Get the expected inputs.
-            var configFilePath = utils.getRequiredString(processRequest.getInput(), "configFilePath");
+            var configFilePath = ITBUtils.getRequiredString(processRequest.getInput(), "configFilePath");
             LOG.info(String.format("Received config file path (from test case) for authentication: [%s].", configFilePath));
             //call access token generator
-            String accessToken=  new AccessTokenGenerator().generateAccessToken(new File(configFilePath));
+            String accessToken = new AccessTokenGenerator().generateAccessToken(new File(configFilePath));
             LOG.info(String.format("generated access token: [%s].", accessToken));
             // Produce the resulting report.
-            response.getOutput().add(utils.createAnyContentSimple("result",accessToken, ValueEmbeddingEnumeration.STRING));
+            response.getOutput()
+                    .add(ITBUtils.createAnyContent("result", accessToken, ValueEmbeddingEnumeration.STRING));
         }
 
         if ("karate".equals(operation)) {
             // Get the expected inputs.
-            var configFilePath = utils.getRequiredString(processRequest.getInput(), "configFilePath");
+            var configFilePath = ITBUtils.getRequiredString(processRequest.getInput(), "configFilePath");
             LOG.info("Received config file path (from test case) for Karate Runner: [{}].", configFilePath);
             //call access token generator
             LOG.info("Calling Karate Runner");
-            Map<String,Object> karateResults= KarateHandler.runKarateTests(configFilePath);
+            Map<String, Object> karateResults = KarateHandler.runKarateTests(configFilePath);
 
             // Produce the resulting report.
-            response.getOutput().add(utils.createAnyContentSimple("result", String.valueOf((boolean) karateResults.get("allPassed")), ValueEmbeddingEnumeration.STRING));
-            response.getOutput().add(utils.createAnyContentSimple("resultDetails",karateResults.toString(), ValueEmbeddingEnumeration.STRING));
+            response.getOutput()
+                    .add(ITBUtils.createAnyContent("result", String.valueOf((boolean) karateResults.get("allPassed")), ValueEmbeddingEnumeration.STRING));
+            response.getOutput()
+                    .add(ITBUtils.createAnyContent("resultDetails", karateResults.toString(), ValueEmbeddingEnumeration.STRING));
         }
 
 
-        response.setReport(utils.createReport(TestResultType.SUCCESS));
+        response.setReport(ITBUtils.createReport(TestResultType.SUCCESS));
         return response;
     }
 

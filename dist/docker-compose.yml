@@ -1,0 +1,58 @@
+version: '3.9'
+
+networks:
+  gitb:
+  test-services:
+
+services:
+  gitb-redis:
+    image: redis:7.0.14
+    restart: unless-stopped
+    networks:
+      - gitb
+
+  gitb-mysql:
+    image: isaitb/gitb-mysql:1.24.0
+    restart: unless-stopped
+    networks:
+      - gitb
+    healthcheck:
+      test: "/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute \"SHOW DATABASES;\""
+      interval: 3s
+      retries: 20
+
+  gitb-srv:
+    image: isaitb/gitb-srv:1.24.0
+    restart: unless-stopped
+    networks:
+      - gitb
+      - test-services
+    environment:
+      - gitb.messaging.callbackURL=http://gitb-srv:8080/itbsrv/MessagingClient
+
+  gitb-ui:
+    image: jungst46/gitb-ui-fhir-sandbox:latest
+    restart: unless-stopped
+    networks:
+      - gitb
+      - test-services
+    ports:
+      - "9000:9000"
+    depends_on:
+      gitb-redis:
+        condition: service_started
+      gitb-mysql:
+        condition: service_healthy
+      gitb-srv:
+        condition: service_started
+
+  fhir-test-services:
+    image: jungst46/itb-fhir-test-services:latest
+    restart: unless-stopped
+    networks:
+      - test-services
+    environment:
+      - itb.base_url=http://gitb-ui:9000
+      - fhir.proxy.endpoint=https://apps-acpt.vitalink-services.be/vault/api/r4
+    ports:
+      - "8181:8181"

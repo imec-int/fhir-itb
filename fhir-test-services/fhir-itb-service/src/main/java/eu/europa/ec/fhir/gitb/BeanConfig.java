@@ -1,9 +1,6 @@
 package eu.europa.ec.fhir.gitb;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.europa.ec.fhir.gitb.MessagingServiceImpl;
-import eu.europa.ec.fhir.gitb.ProcessingServiceImpl;
-import eu.europa.ec.fhir.gitb.ValidationServiceImpl;
 import org.apache.cxf.Bus;
 import org.apache.cxf.jaxws.EndpointImpl;
 import org.springframework.context.annotation.Bean;
@@ -18,30 +15,30 @@ import javax.xml.namespace.QName;
 public class BeanConfig {
 
     /**
-     * The messaging service endpoint.
+     * The FHIR proxy messaging service endpoint.
      *
      * @return The endpoint.
      */
     @Bean
-    public EndpointImpl messagingService(Bus cxfBus, MessagingServiceImpl serviceImplementation) {
+    public EndpointImpl messagingService(Bus cxfBus, ProxyMessagingService serviceImplementation) {
         EndpointImpl endpoint = new EndpointImpl(cxfBus, serviceImplementation);
         endpoint.setServiceName(new QName("http://www.gitb.com/ms/v1/", "MessagingServiceService"));
         endpoint.setEndpointName(new QName("http://www.gitb.com/ms/v1/", "MessagingServicePort"));
-        endpoint.publish("/messaging");
+        endpoint.publish("/messaging/proxy");
         return endpoint;
     }
 
     /**
-     * The messaging service endpoint.
+     * The FHIR resource validation service endpoint.
      *
      * @return The endpoint.
      */
     @Bean
-    public EndpointImpl validationService(Bus cxfBus, ValidationServiceImpl serviceImplementation) {
+    public EndpointImpl validationService(Bus cxfBus, FhirResourceValidationService serviceImplementation) {
         EndpointImpl endpoint = new EndpointImpl(cxfBus, serviceImplementation);
         endpoint.setServiceName(new QName("http://www.gitb.com/vs/v1/", "ValidationService"));
         endpoint.setEndpointName(new QName("http://www.gitb.com/vs/v1/", "ValidationServicePort"));
-        endpoint.publish("/validation");
+        endpoint.publish("/validation/fhir");
         return endpoint;
     }
 
