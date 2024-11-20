@@ -108,12 +108,36 @@ services:
       - hapi.fhir.reuse_cached_search_results_millis=-1
       - hapi.fhir.cors.allow_Credentials=true
       - hapi.fhir.cors.allowed_origin_patterns="http:localhost:*"
+      
+      - hapi.fhir.implementationguides.fhir_r4_core.url=http://hl7.org/fhir/R4/hl7.fhir.r4.core.tgz
       - hapi.fhir.implementationguides.fhir_r4_core.name=hl7.fhir.r4.core
       - hapi.fhir.implementationguides.fhir_r4_core.version=4.0.1
-      - hapi.fhir.implementationguides.fhir_r4_core.url=http://hl7.org/fhir/R4/hl7.fhir.r4.core.tgz
-      - hapi.fhir.implementationguides.currentig.name=hl7.fhir.be.allergy
-      - hapi.fhir.implementationguides.currentig.version=1.2.0
-      - hapi.fhir.implementationguides.currentig.url=https://ehealth.fgov.be/standards/fhir/allergy/
+      - hapi.fhir.implementationguides.fhir_r4_core.reloadExisting=true
+      - hapi.fhir.implementationguides.fhir_r4_core.installMode=STORE_AND_INSTALL
+
+      - hapi.fhir.implementationguides.becore.packageUrl=https://www.ehealth.fgov.be/standards/fhir/core/package.tgz
+      - hapi.fhir.implementationguides.becore.name=hl7.fhir.be.core
+      - hapi.fhir.implementationguides.becore.version=2.1.2
+      - hapi.fhir.implementationguides.becore.reloadExisting=true
+      - hapi.fhir.implementationguides.becore.installMode=STORE_AND_INSTALL
+
+      - hapi.fhir.implementationguides.bealint.packageUrl=https://www.ehealth.fgov.be/standards/fhir/allergy/package.tgz
+      - hapi.fhir.implementationguides.bealint.name=hl7.fhir.be.allergy
+      - hapi.fhir.implementationguides.bealint.version=1.2.0
+      - hapi.fhir.implementationguides.bealint.reloadExisting=true
+      - hapi.fhir.implementationguides.bealint.installMode=STORE_AND_INSTALL
+
+      - hapi.fhir.implementationguides.bevacc.packageUrl=https://www.ehealth.fgov.be/standards/fhir/vaccination/package.tgz
+      - hapi.fhir.implementationguides.bevacc.name=hl7.fhir.be.vaccination
+      - hapi.fhir.implementationguides.bevacc.version=1.1.0
+      - hapi.fhir.implementationguides.bevacc.reloadExisting=true
+      - hapi.fhir.implementationguides.bevacc.installMode=STORE_AND_INSTALL
+
+
+
+
+      
+      
       - hapi.fhir.ig_runtime_upload_enabled=true
       - hapi.fhir.custom_content_path=/custom
       - hapi.fhir.app_content_path=/apps
