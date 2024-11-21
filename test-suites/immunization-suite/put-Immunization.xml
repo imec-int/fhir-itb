@@ -1,10 +1,10 @@
-<testcase id="put-AllergyIntolerance" xmlns="http://www.gitb.com/tdl/v1/"
+<testcase id="put-Immunization" xmlns="http://www.gitb.com/tdl/v1/"
           xmlns:gitb="http://www.gitb.com/core/v1/"
 >
     <metadata>
-        <gitb:name>Test case 3: Update an allergy intolerance</gitb:name>
+        <gitb:name>Test case 2: Update an immunization</gitb:name>
         <gitb:version>1.0</gitb:version>
-        <gitb:description>The FHIR client updates a specific allergy intolerance to a FHIR server.</gitb:description>
+        <gitb:description>The FHIR client updates a specific Immunization to a FHIR server.</gitb:description>
         <!-- See here how we refer to a HTML block that will be added as documentation for the test case. -->
         <!--        <gitb:documentation import="docs/client/test-case-1.html"/>-->
     </metadata>
@@ -53,13 +53,8 @@
 
         <verify handler="StringValidator" desc="Verify Resource Type">
             <input name="actualstring">$resourceType</input>
-            <input name="expectedstring">"AllergyIntolerance"</input>
+            <input name="expectedstring">"Immunization"</input>
         </verify>
-
-        <process handler="JSONPointerProcessor" output="allergyCode">
-            <input name="content">$request{body}</input>
-            <input name="pointer">"/code/coding/0/code"</input>
-        </process>
 
         <process handler="JSONPointerProcessor" output="clinicalStatus">
             <input name="content">$request{body}</input>
@@ -67,18 +62,18 @@
         </process>
 
         <!-- Check for request content and act accordingly -->
-        <if title="Update allergy resource" desc="Scenario 3 - Update an allergy to status 'inactive'">
-            <cond>$resourceType = 'AllergyIntolerance'</cond>
+        <if title="Update immunization resource" desc="Scenario 2 - Update an immunization: functional delete">
+            <cond>$resourceType = 'Immunization'</cond>
             <then>
-                <process handler="JSONPointerProcessor" output="clinicalStatus">
+                <process handler="JSONPointerProcessor" output="status">
                     <input name="content">$request{body}</input>
-                    <input name="pointer">"/clinicalStatus/coding/0/code"</input>
+                    <input name="pointer">"/status"</input>
                 </process>
 
                 <assign to="expectedClinicalStatusCode">"inactive"</assign>
                 <verify handler="StringValidator" desc="Verify clinical status code">
-                    <input name="actualstring">$clinicalStatus</input>
-                    <input name="expectedstring">$expectedClinicalStatusCode</input>
+                    <input name="actualstring">$status</input>
+                    <input name="expectedstring">"Entered-in-error"</input>
                 </verify>
             </then>
         </if>

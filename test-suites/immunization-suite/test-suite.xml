@@ -41,4 +41,7 @@
     -->
 
     <testcase id="post-Immunization"/>
+    <testcase id="put-Immunization"/>
+
+
 </testsuite>
