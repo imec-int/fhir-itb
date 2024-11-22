@@ -87,9 +87,18 @@
 
                 <log>"the object: " || $extension</log>
 
-                <verify handler="RegExpValidator" desc="Verify administered product code">
+                <!-- Create your regexp lookup (this could also be done for example in a scriplet, called as a function for different fields) -->
+                <assign to="fieldToCheck">"code"</assign>
+                <assign to="expression">'"url"[\s]:[\s]+".+\/be-ext-administeredProduct"[,\s"\w:\[{\/\.\-}\]]+"' || $fieldToCheck || '"[\s]:[\s]+"(.+)"'</assign>
+                <!-- Use the regexp to extract the field value -->
+                <process handler="RegExpProcessor" output="field1">
+                    <operation>collect</operation>
                     <input name="input">$extension</input>
-                    <input name="expression">'"code"\s*:\s"J07AF01"'</input>
+                    <input name="expression">$expression</input>
+                </process>
+                <!-- Check its value (you could use several types of validators for this) -->
+                <verify handler="ExpressionValidator" desc="Validate administered product">
+                    <input name="expression">$field1 = 'J07AF01'</input>
                 </verify>
 
                 <process handler="JSONPointerProcessor" output="location">
