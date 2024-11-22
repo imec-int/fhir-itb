@@ -1,5 +1,3 @@
-version: '3.9'
-
 # These volumes record all persistent data for the Test Bed instance.
 volumes:
   gitb-repo:
