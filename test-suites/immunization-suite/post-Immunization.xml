@@ -80,26 +80,32 @@
                     <input name="expectedstring">"IV"</input>
                 </verify>
 
-                <process handler="JSONPointerProcessor" output="extension">
+                <!-- Extract value as before (no change here) - START -->
+                <process handler="JSONPointerProcessor" operation="process" output="extension">
                     <input name="content">$request{body}</input>
                     <input name="pointer">"/extension"</input>
                 </process>
-
-                <log>"the object: " || $extension</log>
-
-                <!-- Create your regexp lookup (this could also be done for example in a scriplet, called as a function for different fields) -->
+                <log>$extension</log>
                 <assign to="fieldToCheck">"code"</assign>
                 <assign to="expression">'"url"[\s]:[\s]+".+\/be-ext-administeredProduct"[,\s"\w:\[{\/\.\-}\]]+"' || $fieldToCheck || '"[\s]:[\s]+"(.+)"'</assign>
-                <!-- Use the regexp to extract the field value -->
                 <process handler="RegExpProcessor" output="field1">
                     <operation>collect</operation>
                     <input name="input">$extension</input>
                     <input name="expression">$expression</input>
                 </process>
-                <!-- Check its value (you could use several types of validators for this) -->
-                <verify handler="ExpressionValidator" desc="Validate administered product">
-                    <input name="expression">$field1 = 'J07AF01'</input>
-                </verify>
+                <!-- Extract value as before (no change here) - END -->
+                <assign to="expectedCode">"J07AF01"</assign>
+                <!-- Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" -->
+                <assign to="reportResult">if ($field1 = $expectedCode) then "SUCCESS" else "FAILURE"</assign>
+                <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
+                <assign to="report{jsonContent}">$request{body}</assign>
+                <assign to="report{expectedCode}">$expectedCode</assign>
+                <!-- Use the DisplayProcessor to show the report. -->
+                <process desc="Verify administered product code" hidden="false" handler="DisplayProcessor">
+                    <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
+                    <input name="result">$reportResult</input>
+                    <input name="parameters">$report</input>
+                </process>
 
                 <process handler="JSONPointerProcessor" output="location">
                     <input name="content">$request{body}</input>
