@@ -42,7 +42,7 @@ As `admin@itb` user, export the community configuration.
 3. Choose the `FHIR community`
 4. Input the password `fhir`
 5. Click on the `all` button to select all the data to export
-6. Click on 'Export'
+6. Click on `Export`
 7. Give it the name `itb_config.zip`
 8. Save the file inside the `config/data` directory in the project root and
    overwrite the existing `itb_config.zip` file
