@@ -42,6 +42,7 @@
 
     <testcase id="post-Immunization"/>
     <testcase id="put-Immunization"/>
+    <testcase id="get-Immunization"/>
 
 
 </testsuite>

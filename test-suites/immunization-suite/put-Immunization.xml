@@ -73,7 +73,7 @@
                 <assign to="expectedClinicalStatusCode">"inactive"</assign>
                 <verify handler="StringValidator" desc="Verify clinical status code">
                     <input name="actualstring">$status</input>
-                    <input name="expectedstring">"Entered-in-error"</input>
+                    <input name="expectedstring">"entered-in-error"</input>
                 </verify>
             </then>
         </if>
@@ -105,7 +105,7 @@
 
         <verify handler="StringValidator" desc="Verify Response Resource Type">
             <input name="actualstring">$resourceType</input>
-            <input name="expectedstring">"AllergyIntolerance"</input>
+            <input name="expectedstring">"Immunization"</input>
         </verify>
 
         <!-- Use the HttpMessagingV2 handler to send ordinary HTTP requests. -->
