@@ -1,5 +1,3 @@
-version: '3.9'
-
 networks:
   gitb:
   test-services:
@@ -32,6 +30,7 @@ services:
 
   gitb-ui:
     image: jungst46/gitb-ui-fhir-sandbox:latest
+    pull_policy: always
     restart: unless-stopped
     networks:
       - gitb
@@ -48,6 +47,7 @@ services:
 
   fhir-test-services:
     image: jungst46/itb-fhir-test-services:latest
+    pull_policy: always
     restart: unless-stopped
     networks:
       - test-services

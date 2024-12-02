@@ -2,7 +2,7 @@
           xmlns:gitb="http://www.gitb.com/core/v1/"
 >
     <metadata>
-        <gitb:name>Test case 1: Submit an allergy intolerance</gitb:name>
+        <gitb:name>Test case 1, 2: Submit an allergy intolerance</gitb:name>
         <gitb:version>1.0</gitb:version>
         <gitb:description>The FHIR client submits a specific allergy intolerance to a FHIR server.</gitb:description>
         <!-- See here how we refer to a HTML block that will be added as documentation for the test case. -->
@@ -61,22 +61,118 @@
             <input name="pointer">"/code/coding/0/code"</input>
         </process>
 
-        <assign to="peanutAllergyCode">"762952008"</assign>
-        <verify handler="StringValidator" desc="Verify Peanut Allergy code">
-            <input name="actualstring">$allergyCode</input>
-            <input name="expectedstring">$peanutAllergyCode</input>
-        </verify>
+        <!-- Check for request content and act accordingly -->
+        <if title="Nut allergy" desc="Scenario 1 - Write nut allergy">
+            <cond>$allergyCode = '13577000'</cond>
+            <then>
+                <assign to="nutAllergyCode">"13577000"</assign>
+                <verify handler="StringValidator" desc="Verify Nut Allergy code">
+                    <input name="actualstring">$allergyCode</input>
+                    <input name="expectedstring">$nutAllergyCode</input>
+                </verify>
 
-        <process handler="JSONPointerProcessor" output="reactionCode">
-            <input name="content">$request{body}</input>
-            <input name="pointer">"/reaction/0/manifestation/0/coding/0/code"</input>
-        </process>
+                <process handler="JSONPointerProcessor" output="clinicalStatus">
+                    <input name="content">$request{body}</input>
+                    <input name="pointer">"/clinicalStatus/coding/0/code"</input>
+                </process>
 
-        <assign to="asthmaReactionCode">"195967001"</assign>
-        <verify handler="StringValidator" desc="Verify asthma reaction code">
-            <input name="actualstring">$reactionCode</input>
-            <input name="expectedstring">$asthmaReactionCode</input>
-        </verify>
+                <assign to="expectedClinicalStatusCode">"active"</assign>
+                <verify handler="StringValidator" desc="Verify clinical status code">
+                    <input name="actualstring">$clinicalStatus</input>
+                    <input name="expectedstring">$expectedClinicalStatusCode</input>
+                </verify>
+
+                <process handler="JSONPointerProcessor" output="category">
+                    <input name="content">$request{body}</input>
+                    <input name="pointer">"/category/0"</input>
+                </process>
+
+                <assign to="expectedCategory">"food"</assign>
+                <verify handler="StringValidator" desc="Verify allergy category">
+                    <input name="actualstring">$expectedCategory</input>
+                    <input name="expectedstring">$expectedCategory</input>
+                </verify>
+
+                <process handler="JSONPointerProcessor" output="verificationStatus">
+                    <input name="content">$request{body}</input>
+                    <input name="pointer">"/verificationStatus/coding/0/code"</input>
+                </process>
+
+                <assign to="expectedVerificationStatus">"confirmed"</assign>
+                <verify handler="StringValidator" desc="Verify verification status">
+                    <input name="actualstring">$verificationStatus</input>
+                    <input name="expectedstring">$expectedVerificationStatus</input>
+                </verify>
+
+                <process handler="JSONPointerProcessor" output="reactionCode">
+                    <input name="content">$request{body}</input>
+                    <input name="pointer">"/reaction/0/manifestation/0/coding/0/code"</input>
+                </process>
+
+                <assign to="diarrheaReactionCode">"62315008"</assign>
+                <verify handler="StringValidator" desc="Verify diarrhea reaction code">
+                    <input name="actualstring">$reactionCode</input>
+                    <input name="expectedstring">$diarrheaReactionCode</input>
+                </verify>
+            </then>
+        </if>
+
+        <if title="House Dust" desc="Scenario 2 - Write house dust allergy">
+            <cond>$allergyCode = '128488006'</cond>
+            <then>
+                <assign to="houseDustAllergyCode">"128488006"</assign>
+                <verify handler="StringValidator" desc="Verify House Dust Allergy code">
+                    <input name="actualstring">$allergyCode</input>
+                    <input name="expectedstring">$houseDustAllergyCode</input>
+                </verify>
+
+                <process handler="JSONPointerProcessor" output="clinicalStatus">
+                    <input name="content">$request{body}</input>
+                    <input name="pointer">"/clinicalStatus/coding/0/code"</input>
+                </process>
+
+                <assign to="expectedClinicalStatusCode">"active"</assign>
+                <verify handler="StringValidator" desc="Verify clinical status code">
+                    <input name="actualstring">$clinicalStatus</input>
+                    <input name="expectedstring">$expectedClinicalStatusCode</input>
+                </verify>
+
+                <process handler="JSONPointerProcessor" output="category">
+                    <input name="content">$request{body}</input>
+                    <input name="pointer">"/category/0"</input>
+                </process>
+
+                <assign to="expectedCategory">"environment"</assign>
+                <verify handler="StringValidator" desc="Verify allergy category">
+                    <input name="actualstring">$expectedCategory</input>
+                    <input name="expectedstring">$expectedCategory</input>
+                </verify>
+
+                <process handler="JSONPointerProcessor" output="verificationStatus">
+                    <input name="content">$request{body}</input>
+                    <input name="pointer">"/verificationStatus/coding/0/code"</input>
+                </process>
+
+                <assign to="expectedVerificationStatus">"unconfirmed"</assign>
+                <verify handler="StringValidator" desc="Verify verification status">
+                    <input name="actualstring">$verificationStatus</input>
+                    <input name="expectedstring">$expectedVerificationStatus</input>
+                </verify>
+
+                <process handler="JSONPointerProcessor" output="reactionCode">
+                    <input name="content">$request{body}</input>
+                    <input name="pointer">"/reaction/0/manifestation/0/coding/0/code"</input>
+                </process>
+
+                <assign to="conjunctivitisReactionCode">"9826008"</assign>
+                <verify handler="StringValidator" desc="Verify conjunctivitis reaction code">
+                    <input name="actualstring">$reactionCode</input>
+                    <input name="expectedstring">$conjunctivitisReactionCode</input>
+                </verify>
+            </then>
+        </if>
+
+
 
         <!-- Use handler="$DOMAIN{proxyHandler}" to trigger the Proxied request and get the response. -->
         <send id="proxyRequest" handler="$DOMAIN{proxyHandler}" from="client" to="server"/>

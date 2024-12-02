@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite id="AllergyIntolerance" xmlns="http://www.gitb.com/tdl/v1/"
+<testsuite id="Immunization" xmlns="http://www.gitb.com/tdl/v1/"
            xmlns:gitb="http://www.gitb.com/core/v1/"
 >
     <!--
@@ -8,10 +8,10 @@
         (e.g. a "test_cases" folder for the test cases, a "scriptlets" folder for scriptlets, "resources" for files to import etc.).
     -->
     <metadata>
-        <gitb:name>FHIR Service API - AllergyIntolerance Resource</gitb:name>
+        <gitb:name>FHIR Service API - Immunization Resource</gitb:name>
         <gitb:version>1.0</gitb:version>
         <gitb:description>
-            Test suite for the AllergyIntolerance resource
+            Test suite for the Immunization resource
         </gitb:description>
     </metadata>
     <actors>
@@ -40,7 +40,9 @@
         the FHIR client and FHIR server roles. Alternatively these could of course be split into separate test suites but that is not necessary.
     -->
 
-    <testcase id="post-AllergyIntolerance"/>
-    <testcase id="put-AllergyIntolerance"/>
-    <testcase id="get-AllergyIntolerance"/>
+    <testcase id="post-Immunization"/>
+    <testcase id="put-Immunization"/>
+    <testcase id="get-Immunization"/>
+
+
 </testsuite>

@@ -1,15 +1,17 @@
 # itb-fhir-test-services
 
-The `itb-fhir-test-services` image packages the `fhir-itb-service` Spring application that extends the ITB core
+The `itb-fhir-test-services` image packages the `fhir-itb-service` Spring
+application that extends the ITB core
 features.
 
-The image is [publicly available in Docker Hub](https://hub.docker.com/r/jungst46/itb-fhir-test-services).
+The image
+is [publicly available in Docker Hub](https://hub.docker.com/r/jungst46/itb-fhir-test-services).
 
 ## Building
 
 To build and publish the image, follow the steps below:
 
-1. Run run the `docker build` command from the project's root
+1. Run the `docker build` command from the project's root
    folder context.
     ```shell
     docker build -f dist/itb-fhir-test-services/Dockerfile -t jungst46/itb-fhir-test-services:latest .
