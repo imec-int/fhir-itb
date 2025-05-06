@@ -21,7 +21,7 @@ docker compose up
 To include the `fhir-test-services` image, add the `full` profile:
 
 ```shell
-docker compose --profiles full up 
+docker compose --profile full up 
 ```
 
 # Distribution
