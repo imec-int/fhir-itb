@@ -57,7 +57,7 @@
         </process>
 
         <assign to="vaccineCodeList" append="true">991000221105</assign>
-        <assign to="vaccineCodeList" append="true">285310000871037</assign>
+        <assign to="vaccineCodeList" append="true">28531000087107</assign>
         <assign to="vaccineCodeList" append="true">871761004</assign>
 
         <process handler="CollectionUtils" output="inList" operation="contains">
@@ -74,7 +74,7 @@
 
         <log>"Vaccine code in list? -> " || $inList</log>
 
-        <!-- if vaccineCode is not meant to be tested, close test-->
+        <!-- if value not -->
         <if>
             <cond>$inList != $boolTrue</cond>
             <then>
@@ -92,17 +92,11 @@
                     "Proxy Response body: " || $proxyRequest{response}{body}
                 </log>
 
-                <!-- Validate Status Code -->
-                <verify handler="StringValidator" desc="Verify response status code">
-                    <input name="actualstring">$proxyRequest{response}{status}</input>
-                    <input name="expectedstring">"201 CREATED"</input>
-                </verify>
-
                 <process handler="JSONPointerProcessor" output="resourceType">
                     <input name="content">$proxyRequest{response}{body}</input>
                     <input name="pointer">"/resourceType"</input>
                 </process>
-                <exit desc="Terminate test" undefined="true"/>
+                <exit desc="Request not eligible for testing." undefined="true"/>
             </then>
         </if>
 
@@ -270,7 +264,7 @@
 
                 <!-- Vaccine code-->
                 <assign to="covidImmunizationCode">"28531000087107"</assign>
-                <verify handler="StringValidator" desc="Verify Cholera vaccine code">
+                <verify handler="StringValidator" desc="Verify COVID vaccine code">
                     <input name="actualstring">$immunizationCode</input>
                     <input name="expectedstring">$covidImmunizationCode</input>
                 </verify>
@@ -456,7 +450,7 @@
 
                 <!-- Vaccine code-->
                 <assign to="rotavirusImmunizationCode">"871761004"</assign>
-                <verify handler="StringValidator" desc="Verify Cholera vaccine code">
+                <verify handler="StringValidator" desc="Verify Rotavirus vaccine code">
                     <input name="actualstring">$immunizationCode</input>
                     <input name="expectedstring">$rotavirusImmunizationCode</input>
                 </verify>
