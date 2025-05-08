@@ -105,7 +105,7 @@ services:
       - hapi.fhir.server_address=localhost:8080
       - hapi.fhir.reuse_cached_search_results_millis=-1
       - hapi.fhir.cors.allow_Credentials=true
-      - hapi.fhir.cors.allowed_origin_patterns="*"
+      - hapi.fhir.cors.allowed_origin_patterns="http:localhost:*"
       
       - hapi.fhir.implementationguides.fhir_r4_core.url=http://hl7.org/fhir/R4/hl7.fhir.r4.core.tgz
       - hapi.fhir.implementationguides.fhir_r4_core.name=hl7.fhir.r4.core
