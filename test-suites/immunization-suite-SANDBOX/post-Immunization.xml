@@ -398,7 +398,7 @@
                 </process>
                 <log> "field 2: " || $countryCode</log>
                 <!-- Extract value as before (no change here) - END -->
-                <assign to="expectedCode">"NE"</assign>
+                <assign to="expectedCode">"BE"</assign>
                 <!-- Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" -->
                 <assign to="reportResult">if ($countryCode = $expectedCode) then "SUCCESS" else "FAILURE"</assign>
                 <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
@@ -617,8 +617,6 @@
                     <input name="expression">$expression</input>
                 </process>
                 <log> "Performer: " || $performer</log>
-                <!-- Extract value as before (no change here) - END -->
-                <assign to="expectedCode">"BE"</assign>
                 <!-- Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" -->
                 <assign to="reportResult">if ($performer != "") then "SUCCESS" else "FAILURE"</assign>
                 <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
