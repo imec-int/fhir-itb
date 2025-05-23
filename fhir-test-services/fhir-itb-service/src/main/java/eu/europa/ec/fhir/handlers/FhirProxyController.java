@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.europa.ec.fhir.gitb.DeferredRequestMapper;
 import eu.europa.ec.fhir.gitb.api.model.StartSessionRequestPayload;
 import eu.europa.ec.fhir.http.RequestParams;
-import eu.europa.ec.fhir.proxy.ItbRestClient;
-import eu.europa.ec.fhir.proxy.FhirRefCodes;
 import eu.europa.ec.fhir.proxy.DeferredRequest;
 import eu.europa.ec.fhir.proxy.FhirProxyServiceHelper;
+import eu.europa.ec.fhir.proxy.FhirRefCodes;
+import eu.europa.ec.fhir.proxy.ItbRestClient;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ public class FhirProxyController {
 
     /**
      * Extracts the reference code from the JSON payload based on the resource
-     *  type.
+     * type.
      */
     private Optional<String> getReferenceCode(String json, String resourceType) {
         var referenceCodePath = this.fhirRefCodes.get(resourceType);

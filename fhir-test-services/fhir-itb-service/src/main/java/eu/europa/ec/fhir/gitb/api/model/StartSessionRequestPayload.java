@@ -3,7 +3,10 @@ package eu.europa.ec.fhir.gitb.api.model;
 import eu.europa.ec.fhir.http.RequestParams;
 import eu.europa.ec.fhir.utils.ITBUtils;
 
-public record StartSessionRequestPayload(String[] testCase, InputMapping[] inputMapping) {
+public record StartSessionRequestPayload(
+        String[] testCase,
+        InputMapping[] inputMapping
+) {
     public static StartSessionRequestPayload fromRequestParams(String[] testCase, RequestParams requestParams) {
         var requestInputMapping = new InputMapping();
         var content = requestInputMapping.input();

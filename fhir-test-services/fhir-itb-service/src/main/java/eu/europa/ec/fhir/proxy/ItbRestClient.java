@@ -13,7 +13,9 @@ public class ItbRestClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(ItbRestClient.class);
     private final RestClient restClient;
 
-    public ItbRestClient(RestClient restClient) {this.restClient = restClient;}
+    public ItbRestClient(RestClient restClient) {
+        this.restClient = restClient;
+    }
 
     /**
      * Starts a test session in ITB.

@@ -5,9 +5,8 @@ import eu.europa.ec.fhir.http.Response;
 /**
  * Information on a received POST for a patient that was not immediately matched to a test session.
  *
- * @param patient The patient reference.
- * @param body The POST body.
+ * @param patient      The patient reference.
+ * @param body         The POST body.
  * @param serverResult The result returned to the caller (produced from the embedded FHIR server).
  */
-public record SavedPost(String patient, String body, Response serverResult) {
-}
+public record SavedPost(String patient, String body, Response serverResult) {}

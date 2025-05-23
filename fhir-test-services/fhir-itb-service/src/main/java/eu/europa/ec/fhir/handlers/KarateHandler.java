@@ -1,9 +1,7 @@
 package eu.europa.ec.fhir.handlers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intuit.karate.Results;
 import com.intuit.karate.Runner;
-import com.intuit.karate.core.ScenarioResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +26,10 @@ public class KarateHandler {
         // Add the pass/fail status for each feature
         results.getScenarioResults().forEach(result -> {
             // Add each feature name and its pass status
-            String featureName = result.getScenario().getFeature().getResource().getRelativePath();
+            String featureName = result.getScenario()
+                    .getFeature()
+                    .getResource()
+                    .getRelativePath();
             testResults.put(featureName, result.isFailed() ? "failed" : "passed");
         });
 

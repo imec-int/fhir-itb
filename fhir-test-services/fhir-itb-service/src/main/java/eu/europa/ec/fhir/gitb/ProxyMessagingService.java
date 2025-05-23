@@ -1,8 +1,17 @@
 package eu.europa.ec.fhir.gitb;
 
 import com.gitb.core.AnyContent;
+import com.gitb.ms.BasicRequest;
+import com.gitb.ms.BeginTransactionRequest;
+import com.gitb.ms.FinalizeRequest;
+import com.gitb.ms.GetModuleDefinitionResponse;
+import com.gitb.ms.InitiateRequest;
+import com.gitb.ms.InitiateResponse;
+import com.gitb.ms.MessagingService;
+import com.gitb.ms.ReceiveRequest;
+import com.gitb.ms.SendRequest;
+import com.gitb.ms.SendResponse;
 import com.gitb.ms.Void;
-import com.gitb.ms.*;
 import com.gitb.tr.TAR;
 import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.utils.ITBUtils;
@@ -80,11 +89,13 @@ public class ProxyMessagingService implements MessagingService {
         reportContext.setName("report");
         reportContext.setType("map");
 
-        var deferredRequestOpt = deferredRequestMapper.get(sessionId);
-        if (deferredRequestOpt.isPresent()) {
+        var deferredRequest = deferredRequestMapper.get(sessionId);
+        if (deferredRequest.isPresent()) {
             LOGGER.info("Found deferred request for session [{}]", sessionId);
 
-            ResponseEntity<String> deferredResponse = deferredRequestOpt.get().resolve();
+            ResponseEntity<String> deferredResponse = deferredRequest
+                    .get()
+                    .resolve();
 
             report.setResult(TestResultType.SUCCESS);
             reportContext.setName("report");
@@ -106,10 +117,10 @@ public class ProxyMessagingService implements MessagingService {
             var errorMessage = String.format("No deferred request found for session [%s]", sessionId);
             LOGGER.warn(errorMessage);
 
-            var responseContent = new AnyContent();
-            responseContent.setName("error");
-            responseContent.setType("string");
-            reportContext.setValue(errorMessage);
+            //var responseContent = new AnyContent();
+            //responseContent.setName("error");
+            //responseContent.setType("string");
+            //reportContext.setValue(errorMessage);
         }
 
         response.setReport(report);
