@@ -1,4 +1,4 @@
-package eu.europa.ec.fhir.handlers;
+package eu.europa.ec.fhir.proxy;
 
 import eu.europa.ec.fhir.http.HttpUtils;
 import eu.europa.ec.fhir.http.RequestParams;
@@ -11,11 +11,12 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.Optional;
 
 @Service
-public class FhirProxyService {
+public class FhirProxyServiceHelper {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FhirProxyService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FhirProxyServiceHelper.class);
 
     @Value("${fhir.proxy.endpoint}")
     private String fhirProxyEndpoint;

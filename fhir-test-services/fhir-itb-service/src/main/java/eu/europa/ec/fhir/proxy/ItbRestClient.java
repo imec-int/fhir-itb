@@ -1,4 +1,4 @@
-package eu.europa.ec.fhir.handlers;
+package eu.europa.ec.fhir.proxy;
 
 import eu.europa.ec.fhir.gitb.api.model.StartSessionRequestPayload;
 import eu.europa.ec.fhir.gitb.api.model.StartSessionResponse;

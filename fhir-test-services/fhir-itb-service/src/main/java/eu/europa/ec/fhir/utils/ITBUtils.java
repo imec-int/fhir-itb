@@ -7,7 +7,7 @@ import com.gitb.core.ValueEmbeddingEnumeration;
 import com.gitb.tr.TAR;
 import com.gitb.tr.TestResultType;
 import com.gitb.tr.ValidationCounters;
-import eu.europa.ec.fhir.handlers.RequestResult;
+import eu.europa.ec.fhir.http.Response;
 import jakarta.xml.ws.WebServiceContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.headers.Header;
@@ -304,7 +304,7 @@ public class ITBUtils {
      * @param payload  The payload sent.
      * @param result   The call result.
      */
-    public static void addCommonReportData(TAR report, String endpoint, String payload, RequestResult result) {
+    public static void addCommonReportData(TAR report, String endpoint, String payload, Response result) {
         if (endpoint != null || payload != null) {
             var requestItem = new AnyContent();
             requestItem.setType("map");
