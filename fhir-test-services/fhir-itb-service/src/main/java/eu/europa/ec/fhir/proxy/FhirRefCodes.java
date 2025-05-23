@@ -15,6 +15,6 @@ public class FhirRefCodes {
     }
 
     public Optional<String> get(String resourceType) {
-        return paths.get(resourceType).describeConstable();
+        return Optional.ofNullable(paths.get(resourceType));
     }
 }
