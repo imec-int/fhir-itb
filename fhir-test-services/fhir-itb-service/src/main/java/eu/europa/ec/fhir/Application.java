@@ -2,11 +2,13 @@ package eu.europa.ec.fhir;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
  * Entry point to bootstrap the application.
  */
 @SpringBootApplication
+@ConfigurationPropertiesScan
 public class Application {
 
     /**

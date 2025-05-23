@@ -5,10 +5,18 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitb.core.LogLevel;
 import com.gitb.core.ValueEmbeddingEnumeration;
+import com.gitb.tr.BAR;
 import com.gitb.tr.ObjectFactory;
-import com.gitb.tr.*;
+import com.gitb.tr.TAR;
+import com.gitb.tr.TestAssertionGroupReportsType;
+import com.gitb.tr.TestAssertionReportType;
+import com.gitb.tr.TestResultType;
+import com.gitb.tr.ValidationCounters;
+import com.gitb.vs.GetModuleDefinitionResponse;
+import com.gitb.vs.ValidateRequest;
+import com.gitb.vs.ValidationResponse;
+import com.gitb.vs.ValidationService;
 import com.gitb.vs.Void;
-import com.gitb.vs.*;
 import eu.europa.ec.fhir.utils.ITBUtils;
 import jakarta.annotation.Resource;
 import jakarta.xml.bind.JAXBElement;
@@ -99,7 +107,10 @@ public class FhirResourceValidationService implements ValidationService {
                         .uri(uri)
                         .header(
                                 HttpHeaders.AUTHORIZATION,
-                                Objects.requireNonNull(requestParams.headers().get(HttpHeaders.AUTHORIZATION))
+                                Objects.requireNonNull(
+                                        requestParams.headers()
+                                                .get(HttpHeaders.AUTHORIZATION)
+                                        )
                                         .toArray(new String[0])
                         )
                         .contentType(MediaType.valueOf(fhirContentType))

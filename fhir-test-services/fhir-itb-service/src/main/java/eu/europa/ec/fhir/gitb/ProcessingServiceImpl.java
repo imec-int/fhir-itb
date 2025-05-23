@@ -1,8 +1,14 @@
 package eu.europa.ec.fhir.gitb;
 
 import com.gitb.core.ValueEmbeddingEnumeration;
+import com.gitb.ps.BasicRequest;
+import com.gitb.ps.BeginTransactionRequest;
+import com.gitb.ps.BeginTransactionResponse;
+import com.gitb.ps.GetModuleDefinitionResponse;
+import com.gitb.ps.ProcessRequest;
+import com.gitb.ps.ProcessResponse;
+import com.gitb.ps.ProcessingService;
 import com.gitb.ps.Void;
-import com.gitb.ps.*;
 import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.accesstoken.AccessTokenGenerator;
 import eu.europa.ec.fhir.handlers.KarateHandler;
