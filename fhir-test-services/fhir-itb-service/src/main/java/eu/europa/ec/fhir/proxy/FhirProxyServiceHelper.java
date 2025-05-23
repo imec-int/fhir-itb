@@ -32,7 +32,7 @@ public class FhirProxyService {
         }
     }
 
-    public RequestParams getFhirHttpParams(HttpServletRequest request, String path, String body) {
+    public RequestParams toFhirHttpParams(HttpServletRequest request, String path, Optional<String> body) {
         return new RequestParams(
                 buildFhirURI(request, fhirProxyEndpoint, path),
                 HttpMethod.valueOf(request.getMethod()),
