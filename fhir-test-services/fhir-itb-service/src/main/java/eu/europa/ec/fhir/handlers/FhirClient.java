@@ -1,5 +1,6 @@
 package eu.europa.ec.fhir.handlers;
 
+import eu.europa.ec.fhir.http.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,7 +40,7 @@ public class FhirClient {
      * @param patientIdentifier  The patient identifier (to be appended to the fixed prefix, optional).
      * @return The result of the call.
      */
-    public RequestResult callServer(HttpMethod method, URI uri, String payload, String authorizationToken, String patientIdentifier) {
+    public Response callServer(HttpMethod method, URI uri, String payload, String authorizationToken, String patientIdentifier) {
         // Construct payload based on the presence of patientIdentifier
         if (patientIdentifier != null && !patientIdentifier.isEmpty()) {
             String fullPatientIdentifier = PATIENT_IDENTIFIER_PREFIX + patientIdentifier;
@@ -75,7 +76,7 @@ public class FhirClient {
                     .build()
                     .send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             LOG.info("{}{}", response.body(), response.headers());
-            return new RequestResult(response.statusCode(), response.body(), response.headers());
+            return new Response(response.statusCode(), response.body(), response.headers());
         } catch (IOException | InterruptedException e) {
             throw new IllegalStateException(String.format("Error while calling endpoint [%s]", uri), e);
         }

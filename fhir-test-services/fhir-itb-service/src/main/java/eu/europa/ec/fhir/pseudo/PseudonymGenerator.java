@@ -1,6 +1,12 @@
 package eu.europa.ec.fhir.pseudo;
 
-import be.smals.vas.integrations.helper.*;
+import be.smals.vas.integrations.helper.PseudonymInTransit;
+import be.smals.vas.integrations.helper.PseudonymisationHelper;
+import be.smals.vas.integrations.helper.StandardJwksClient;
+import be.smals.vas.integrations.helper.StandardKeystoreEntryPasswordProtectionSupplier;
+import be.smals.vas.integrations.helper.StandardKeystoreSupplier;
+import be.smals.vas.integrations.helper.StandardPrivateKeySupplier;
+import be.smals.vas.integrations.helper.StandardPseudonymisationClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -117,7 +123,9 @@ public class PseudonymGenerator {
         }
 
         // Encode the JSON string to Base64
-        String base64EncodedPseudonym = Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+        String base64EncodedPseudonym = Base64
+                .getUrlEncoder()
+                .encodeToString(json.getBytes(StandardCharsets.UTF_8));
         System.out.println("base64EncodedPseudonym = " + base64EncodedPseudonym);
         return base64EncodedPseudonym;
     }

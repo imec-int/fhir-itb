@@ -37,9 +37,11 @@ public class DeferredRequest {
     public ResponseEntity<String> resolve() throws IllegalStateException {
         if (deferredResult.isSetOrExpired()) {
             if (deferredResult.hasResult()) {
+                // SAFETY: we check for a result above, and the result type is
+                //  well-defined as ResponseEntity<String>
                 return (ResponseEntity<String>) deferredResult.getResult();
             }
-            // the result has expired so we don't performing the request
+            // the result has expired so we don't perform the request
             // to avoid side effects
             throw new IllegalStateException("Deferred result has expired.");
         }
@@ -48,7 +50,7 @@ public class DeferredRequest {
     }
 
     /**
-     * Actually performs the request and sets the result of the {@link DeferredResult}.
+     * Performs the request and sets the deferred result.
      */
     private ResponseEntity<String> sendRequest() {
         var spec = restClient
@@ -56,9 +58,7 @@ public class DeferredRequest {
                 .uri(requestParams.uri())
                 .headers(headers -> headers.addAll(requestParams.headers()));
 
-        if (requestParams.body() != null) {
-            spec.body(requestParams.body());
-        }
+        requestParams.body().ifPresent(spec::body);
 
         ResponseEntity<String> result;
         try {

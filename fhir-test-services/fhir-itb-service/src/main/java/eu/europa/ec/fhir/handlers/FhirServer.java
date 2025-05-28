@@ -1,5 +1,6 @@
 package eu.europa.ec.fhir.handlers;
 
+import eu.europa.ec.fhir.http.Response;
 import eu.europa.ec.fhir.state.StateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,7 @@ public class FhirServer {
      */
     @PostMapping(value = "/server/api/{pathExtension}")
     public ResponseEntity<String> receivePost(@PathVariable String pathExtension, @RequestBody final String body) {
-        Optional<RequestResult> response = stateManager.handleReceivedPost(pathExtension, body);
+        Optional<Response> response = stateManager.handleReceivedPost(pathExtension, body);
         if (response.isPresent()) {
             var builder = ResponseEntity.status(response.get().status());
             var contentTypeHeader = response.get().contentType();

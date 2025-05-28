@@ -10,7 +10,7 @@ import com.gitb.tr.TAR;
 import com.gitb.tr.TestResultType;
 import eu.europa.ec.fhir.gitb.TestBedNotifier;
 import eu.europa.ec.fhir.handlers.FhirClient;
-import eu.europa.ec.fhir.handlers.RequestResult;
+import eu.europa.ec.fhir.http.Response;
 import eu.europa.ec.fhir.utils.ITBUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -168,14 +168,14 @@ public class StateManager {
      * @param body          The POST's body.
      * @return The response to return to the caller.
      */
-    public Optional<RequestResult> handleReceivedPost(String pathExtension, String body) {
-        Optional<RequestResult> result = Optional.empty();
+    public Optional<Response> handleReceivedPost(String pathExtension, String body) {
+        Optional<Response> result = Optional.empty();
         if (fhirServerEndpoint != null) {
             Optional<String> patient = extractPatient(body);
             if (patient.isPresent()) {
                 body = ITBUtils.prettyPrintJson(body);
                 // Call embedded FHIR server.
-                RequestResult serverResult = fhirClient.callServer(HttpMethod.POST, constructUri(fhirServerEndpoint, pathExtension), body, null, null);
+                Response serverResult = fhirClient.callServer(HttpMethod.POST, constructUri(fhirServerEndpoint, pathExtension), body, null, null);
                 result = Optional.of(serverResult);
                 // Check to see if any test sessions were expecting the call.
                 synchronized (lock) {
@@ -227,7 +227,7 @@ public class StateManager {
      * @param payload      The received payload.
      * @param result       The result of the call once forwarded to our internal FHIR server.
      */
-    private void completeExpectedPost(ExpectedPost expectedPost, String payload, RequestResult result) {
+    private void completeExpectedPost(ExpectedPost expectedPost, String payload, Response result) {
         TAR report = ITBUtils.createReport(TestResultType.SUCCESS);
         ITBUtils.addCommonReportData(report, null, payload, result);
         testBedNotifier.notifyTestBed(expectedPost.testSessionId(), expectedPost.callId(), expectedPost.callbackAddress(), report);
