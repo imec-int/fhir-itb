@@ -106,6 +106,24 @@ public class FhirProxyController {
         } catch (Exception e) {
             LOGGER.warn("Failed to start test session(s): {}", e.getMessage());
             deferredRequest.resolve();
+
+            try {
+                testId = String.format("%s-%s", proxyRequestParams.method().toString().toLowerCase(), resourceType.replace("/", ""));
+                LOGGER.info("Intiating general test session(s), testId:" + testId);
+                deferredResult = new DeferredResult<ResponseEntity<String>>();
+                deferredRequest = new DeferredRequest(proxyRequestParams, deferredResult);
+                var startSessionPayload = StartSessionRequestPayload.fromRequestParams(new String[]{testId}, proxyRequestParams);
+                var itbResponse = itbRestClient.startSession(startSessionPayload);
+                var createdSessions = itbResponse.createdSessions();
+                var sessionId = createdSessions[0].session();
+                LOGGER.info("Test session(s) created: {}", (Object[]) createdSessions);
+                deferredRequests.put(sessionId, deferredRequest);
+            } catch (Exception ec) {
+                LOGGER.warn("Failed to start test session(s): {}", ec.getMessage());
+                deferredRequest.resolve();
+            }
+
+
         }
 
         return deferredResult;
