@@ -1,4 +1,4 @@
-<testcase id="post-Immunization" xmlns="http://www.gitb.com/tdl/v1/"
+<testcase id="post-Immunization-871895005" xmlns="http://www.gitb.com/tdl/v1/"
           xmlns:gitb="http://www.gitb.com/core/v1/"
 >
     <metadata>
@@ -48,12 +48,12 @@
         </log>
 
 
-        <!-- Vaccine code-->
-        <assign to="rotavirusImmunizationCode">"871895005"</assign>
-        <verify handler="StringValidator" desc="Verify Rotavirus vaccine code">
-            <input name="actualstring">$immunizationCode</input>
-            <input name="expectedstring">$rotavirusImmunizationCode</input>
-        </verify>
+        <!-- Vaccine code | 20250526 obsolete, directly calling the testcase-->
+<!--        <assign to="rotavirusImmunizationCode">"871895005"</assign>-->
+<!--        <verify handler="StringValidator" desc="Verify Rotavirus vaccine code">-->
+<!--            <input name="actualstring">$immunizationCode</input>-->
+<!--            <input name="expectedstring">$rotavirusImmunizationCode</input>-->
+<!--        </verify>-->
 
         <!-- Administration route -->
         <process handler="JSONPointerProcessor" output="administrationRoute">
@@ -274,10 +274,24 @@
         </log>
 
         <!-- Validate Status Code -->
-        <verify handler="StringValidator" desc="Verify response status code">
-            <input name="actualstring">$proxyRequest{response}{status}</input>
-            <input name="expectedstring">"201 CREATED"</input>
-        </verify>
+        <assign to="responseCodeList" append="true">'201 CREATED'</assign>
+        <assign to="responseCodeList" append="true">'200 OK'</assign>
+        
+        <process handler="CollectionUtils" operation="contains" output="responseCode">
+            <input name="list">$responseCodeList</input>
+            <input name="value">$proxyRequest{response}{status}</input>
+        </process>
+
+        <assign to="responseCodeResult">if ($responseCode) then "SUCCESS" else "FAILURE"</assign>
+        
+        <assign to="report{jsonContent}">$responseCodeList</assign>
+        <assign to="report{expectedCode}">$proxyRequest{response}{status}</assign>
+
+        <process desc="Verify response status code" hidden="false" handler="DisplayProcessor">
+            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
+            <input name="result">$responseCodeResult</input>
+            <input name="parameters">$report</input>
+        </process>
 
         <process handler="JSONPointerProcessor" output="resourceType">
             <input name="content">$proxyRequest{response}{body}</input>

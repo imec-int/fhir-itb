@@ -109,34 +109,33 @@
 
 
         <!-- Stock location -->
-        <!-- Administered product -->
-        <process handler="JSONPointerProcessor" operation="process" output="extension">
-            <input name="content">$request{body}</input>
-            <input name="pointer">"/extension"</input>
-        </process>
-        <log>$extension</log>
-        <assign to="fieldToCheck">"value"</assign>
-        <assign to="expression">'be-ext-vaccination-stock-location"[,\s"\w:\[{\/\.\-}\]]*"' || $fieldToCheck ||
-            '"[\r\n\t\f\v ]*:[\r\n\t\f\v ]*"(.*)'
-        </assign>
-        <process handler="RegExpProcessor" output="stockLocation">
-            <operation>collect</operation>
-            <input name="input">$extension</input>
-            <input name="expression">$expression</input>
-        </process>
-        <log>$stockLocation</log>
-        <!-- Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" -->
-        <!-- Check if stock location is not empty-->
-        <assign to="reportResult">if ($stockLocation != "") then "SUCCESS" else "FAILURE"</assign>
-        <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
-        <assign to="report{jsonContent}">$extension</assign>
-        <assign to="report{expectedCode}">$expectedCode</assign>
-        <!-- Use the DisplayProcessor to show the report. -->
-        <process desc="Verify stock location presence" hidden="false" handler="DisplayProcessor">
-            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
-            <input name="result">$reportResult</input>
-            <input name="parameters">$report</input>
-        </process>
+<!--        <process handler="JSONPointerProcessor" operation="process" output="extension">-->
+<!--            <input name="content">$request{body}</input>-->
+<!--            <input name="pointer">"/extension"</input>-->
+<!--        </process>-->
+<!--        <log>$extension</log>-->
+<!--        <assign to="fieldToCheck">"value"</assign>-->
+<!--        <assign to="expression">'be-ext-vaccination-stock-location"[,\s"\w:\[{\/\.\-}\]]*"' || $fieldToCheck ||-->
+<!--            '"[\r\n\t\f\v ]*:[\r\n\t\f\v ]*"(.*)'-->
+<!--        </assign>-->
+<!--        <process handler="RegExpProcessor" output="stockLocation">-->
+<!--            <operation>collect</operation>-->
+<!--            <input name="input">$extension</input>-->
+<!--            <input name="expression">$expression</input>-->
+<!--        </process>-->
+<!--        <log>$stockLocation</log>-->
+<!--        &lt;!&ndash; Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" &ndash;&gt;-->
+<!--        &lt;!&ndash; Check if stock location is not empty&ndash;&gt;-->
+<!--        <assign to="reportResult">if ($stockLocation != "") then "SUCCESS" else "FAILURE"</assign>-->
+<!--        &lt;!&ndash; Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) &ndash;&gt;-->
+<!--        <assign to="report{jsonContent}">$extension</assign>-->
+<!--        <assign to="report{expectedCode}">$expectedCode</assign>-->
+<!--        &lt;!&ndash; Use the DisplayProcessor to show the report. &ndash;&gt;-->
+<!--        <process desc="Verify stock location presence" hidden="false" handler="DisplayProcessor">-->
+<!--            &lt;!&ndash; The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined &ndash;&gt;-->
+<!--            <input name="result">$reportResult</input>-->
+<!--            <input name="parameters">$report</input>-->
+<!--        </process>-->
 
         <!-- Presence of patient identifier -->
         <process handler="JSONPointerProcessor" output="patient">
@@ -242,11 +241,11 @@
         </process>
         <log>"LotNumber: " || $lotNumber</log>
 
-<!--        <assign to="reportResult">if ($lotNumber != "") then "SUCCESS" else "FAILURE"</assign>-->
-        <assign to="reportResult">if ($lotNumber == "AC37B483AA") then "SUCCESS" else "FAILURE"</assign>
+        <assign to="reportResult">if ($lotNumber != "") then "SUCCESS" else "FAILURE"</assign>
+<!--        <assign to="reportResult">if ($lotNumber == "AC37B483AA") then "SUCCESS" else "FAILURE"</assign>-->
         <assign to="report{jsonContent}">$extension</assign>
-<!--        <assign to="report{expectedCode}">"Any lotnumber available: '" || $lotNumber || "'"</assign>-->
-        <assign to="report{expectedCode}">"AC37B483AA"</assign>
+        <assign to="report{expectedCode}">"Any lotnumber available: '" || $lotNumber || "'"</assign>
+<!--        <assign to="report{expectedCode}">"AC37B483AA"</assign>-->
         <process desc="Verify if lotNumber is provided" hidden="false" handler="DisplayProcessor">
             <input name="result">$reportResult</input>
             <input name="parameters">$report</input>

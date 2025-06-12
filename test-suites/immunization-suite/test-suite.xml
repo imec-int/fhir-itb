@@ -41,6 +41,8 @@
     -->
 
     <testcase id="post-Immunization"/>
+    <testcase id="post-Immunization-871761004"/>
+    <testcase id="post-Immunization-28531000087107"/>
     <testcase id="put-Immunization"/>
     <testcase id="get-Immunization"/>
 
