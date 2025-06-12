@@ -1,0 +1,272 @@
+<testcase id="ImmunizationBundle" xmlns="http://www.gitb.com/tdl/v1/"
+          xmlns:gitb="http://www.gitb.com/core/v1/"
+>
+    <metadata>
+        <gitb:name>Immunization SANDBOX - TS-VACC-W-01</gitb:name>
+        <gitb:version>1.0</gitb:version>
+        <gitb:description>Immunization without stocklocation</gitb:description>
+        <!-- See here how we refer to a HTML block that will be added as documentation for the test case. -->
+        <!--        <gitb:documentation import="docs/client/test-case-1.html"/>-->
+    </metadata>
+    <actors>
+        <!--
+            The Actor IDs need to match those in the test suite and in the test engine. One of these needs to always be the SUT (System Under Test).
+        -->
+        <gitb:actor id="client" role="SUT"/>
+        <gitb:actor id="server"/>
+    </actors>
+    <variables>
+        <!--
+            The ProxyHandler will forward the request to the test cases.
+        -->
+        <var name="request" type="map"/>
+    </variables>
+    <!--
+        Setting "stopOnError" to true will stop the test session as soon as an error is encountered. By default, test sessions will continue regardless of errors.
+    -->
+    <steps stopOnError="false">
+
+        <log>'Started session '||$SESSION{sessionId}||' for test case
+            '||$SESSION{testCaseId}||''
+        </log>
+        <!-- Log the received request parameters -->
+        <log>"### Proxy Request Data ###"</log>
+        <log>$request</log>
+        <log>
+            "Request URI: " || $request{uri}
+        </log>
+        <log>
+            "Request Method: " || $request{method}
+        </log>
+        <log>
+            "Request Headers: " || $request{headers}
+        </log>
+        <log>
+            "Request Body: " || $request{body}
+        </log>
+
+        <!-- Vaccine code | 20250526 obsolete, because directly calling the testcase -->
+<!--        <assign to="choleraImmunizationCode">"991000221105"</assign>-->
+<!--        <verify handler="StringValidator" desc="Verify Cholera vaccine code">-->
+<!--            <input name="actualstring">$immunizationCode</input>-->
+<!--            <input name="expectedstring">$choleraImmunizationCode</input>-->
+<!--        </verify>-->
+
+        <!-- Administration route -->
+        <process handler="JSONPointerProcessor" output="administrationRoute">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/route/coding/0/code"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify administration route">
+            <input name="actualstring">$administrationRoute</input>
+            <input name="expectedstring">"IM"</input>
+        </verify>
+
+        <!-- Extract value as before (no change here) - START -->
+        <!-- Administered product -->
+        <process handler="JSONPointerProcessor" operation="process" output="extension">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/extension"</input>
+        </process>
+        <log>$extension</log>
+        <assign to="fieldToCheck">"code"</assign>
+        <assign to="expression">'"url"[\s]:[\s]+".+\/be-ext-administeredProduct"[,\s"\w:\[{\/\.\-}\]]+"' || $fieldToCheck || '"[\s]:[\s]+"(.+)"'</assign>
+        <process handler="RegExpProcessor" output="administeredProductCode">
+            <operation>collect</operation>
+            <input name="input">$extension</input>
+            <input name="expression">$expression</input>
+        </process>
+        <log>$administeredProductCode</log>
+        <!-- Extract value as before (no change here) - END -->
+        <assign to="expectedCode">"2285575"</assign>
+        <!-- Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" -->
+        <assign to="reportResult">if ($administeredProductCode = $expectedCode) then "SUCCESS" else "FAILURE"</assign>
+        <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
+        <assign to="report{jsonContent}">$extension</assign>
+        <assign to="report{expectedCode}">$expectedCode</assign>
+        <!-- Use the DisplayProcessor to show the report. -->
+        <process desc="Verify administered product code" hidden="false" handler="DisplayProcessor">
+            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
+            <input name="result">$reportResult</input>
+            <input name="parameters">$report</input>
+        </process>
+
+        <!-- Presence of patient identifier -->
+        <process handler="JSONPointerProcessor" output="patient">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/patient/identifier/_value/extension/0/url"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify patient presence">
+            <input name="actualstring">$patient</input>
+            <input name="expectedstring">"https://www.ehealth.fgov.be/standards/fhir/infsec/StructureDefinition/be-ext-pseudonymization"</input>
+        </verify>
+
+        <!-- Note -->
+        <process handler="JSONPointerProcessor" output="note">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/note/0/text"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify note">
+            <input name="actualstring">$note</input>
+            <input name="expectedstring">"TS-VACC-W-01"</input>
+        </verify>
+
+        <!-- Location -->
+        <process handler="JSONPointerProcessor" operation="process" output="contained">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/contained"</input>
+        </process>
+        <assign to="fieldToCheck">"country"</assign>
+        <assign to="expression">'"address"[\s]*:[{\s]*"' || $fieldToCheck || '[\s:"]+([\w]+)"'</assign>
+
+        <process handler="RegExpProcessor" output="countryCode">
+            <operation>collect</operation>
+            <input name="input">$contained</input>
+            <input name="expression">$expression</input>
+        </process>
+        <log> "field 2: " || $countryCode</log>
+        <!-- Extract value as before (no change here) - END -->
+        <assign to="expectedCode">"BE"</assign>
+        <!-- Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" -->
+        <assign to="reportResult">if ($countryCode = $expectedCode) then "SUCCESS" else "FAILURE"</assign>
+        <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
+        <assign to="report{jsonContent}">$contained</assign>
+        <assign to="report{expectedCode}">$expectedCode</assign>
+        <!-- Use the DisplayProcessor to show the report. -->
+        <process desc="Verify location code" hidden="false" handler="DisplayProcessor">
+            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
+            <input name="result">$reportResult</input>
+            <input name="parameters">$report</input>
+        </process>
+
+        <!-- Status -->
+        <process handler="JSONPointerProcessor" output="status">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/status"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify status">
+            <input name="actualstring">$status</input>
+            <input name="expectedstring">"completed"</input>
+        </verify>
+
+        <!-- Dose quantity-->
+        <process handler="JSONPointerProcessor" output="doseQuantity">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/doseQuantity/value"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify dose quantity">
+            <input name="actualstring">$doseQuantity</input>
+            <input name="expectedstring">"1"</input>
+        </verify>
+
+        <!-- Body site -->
+        <process handler="JSONPointerProcessor" output="bodySite">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/site/coding/0/code"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify body site">
+            <input name="actualstring">$bodySite</input>
+            <input name="expectedstring">"371309009"</input>
+        </verify>
+
+        <!-- Body laterality -->
+        <process handler="JSONPointerProcessor" output="bodyLaterality">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/site/extension/0/valueCoding/code"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify body laterality">
+            <input name="actualstring">$bodyLaterality</input>
+            <input name="expectedstring">"51440002"</input>
+        </verify>
+
+        <!-- Reason code-->
+        <process handler="JSONPointerProcessor" output="reasonCode">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/reasonCode/0/coding/0/code"</input>
+        </process>
+
+        <verify handler="StringValidator" desc="Verify reason code">
+            <input name="actualstring">$reasonCode</input>
+            <input name="expectedstring">"1137457009"</input>
+        </verify>
+
+        <!-- OccurrenceDateTime timestamp-->
+        <process handler="JSONPointerProcessor" output="occurenceTimestamp">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/occurrenceDateTime"</input>
+        </process>
+
+        <verify handler="RegExpValidator" desc="Verify occurrenceDateTime timestamp">
+            <input name="input">$occurenceTimestamp</input>
+            <input name="expression">"20[0-9]{2}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\+[0-9]{2}:[0-9]{2}"</input>
+        </verify>
+
+        <!-- Recorded timestamp-->
+        <process handler="JSONPointerProcessor" output="recordedTimestamp">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/recorded"</input>
+        </process>
+
+        <verify handler="RegExpValidator" desc="Verify recorded timestamp">
+            <input name="input">$recordedTimestamp</input>
+            <input name="expression">"20[0-9]{2}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\+[0-9]{2}:[0-9]{2}"</input>
+        </verify>
+
+        <!-- Use handler="$DOMAIN{proxyHandler}" to trigger the Proxied request and get the response. -->
+        <send id="proxyRequest" handler="$DOMAIN{proxyHandler}" from="client" to="server" hidden="true"/>
+        <log>"### Proxy Response Data ###"</log>
+        <log>$proxyRequest{response}</log>
+        <!-- <log>$DOMAIN{riziv_id}</log> -->
+        <log>
+            "Proxy Response status: " || $proxyRequest{response}{status}
+        </log>
+        <log>
+            "Proxy Response headers: " || $proxyRequest{response}{headers}
+        </log>
+        <log>
+            "Proxy Response body: " || $proxyRequest{response}{body}
+        </log>
+
+        <!-- Validate Status Code -->
+        <verify handler="StringValidator" desc="Verify response status code">
+            <input name="actualstring">$proxyRequest{response}{status}</input>
+            <input name="expectedstring">"201 CREATED"</input>
+        </verify>
+
+        <process handler="JSONPointerProcessor" output="resourceType">
+            <input name="content">$proxyRequest{response}{body}</input>
+            <input name="pointer">"/resourceType"</input>
+        </process>
+
+        <!-- Use the HttpMessagingV2 handler to send ordinary HTTP requests.
+        <send id="httpSend" from="client" to="server" handler="HttpMessagingV2">
+            <input name="uri">
+                "https://echo.free.beeceptor.com/"
+            </input>
+            <input name="method">"GET"</input>
+        </send>
+        <log>"### HttpMessagingV2 ###"</log>
+        <log>$httpSend{response}</log> -->
+
+
+    </steps>
+    <!-- The output section allows us to define specialised summary error (or success) messages to make the result more user-friendly. -->
+    <output>
+        <success>
+            <default>"Test case passed successfully."</default>
+        </success>
+        <failure>
+            <default>"Test case failed."</default>
+        </failure>
+        <undefined>
+            <default>"Call not picked up for testing"</default>
+        </undefined>
+    </output>
+</testcase>
