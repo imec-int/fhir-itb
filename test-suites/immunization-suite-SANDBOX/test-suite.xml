@@ -40,8 +40,27 @@
         the FHIR client and FHIR server roles. Alternatively these could of course be split into separate test suites but that is not necessary.
     -->
 
+    <!--    WRITE TESTSCENARIO'S   -->
+    <!--    TS-W-01     -->
+    <testcase id="post-Immunization-991000221105"/>
+    <!--    TS-W-02      -->
+    <testcase id="post-Immunization-28531000087107"/>
+    <!--    TS-W-03     -->
+    <testcase id="post-Immunization-871761004"/>
+    <!--    TS-W-14-1   -->
+    <testcase id="post-Immunization-871875004"/>
+    <!--    TS-W-14-2   -->
+    <testcase id="post-Immunization-871895005"/>
+    <!--    GENERIC     -->
     <testcase id="post-Immunization"/>
+
+    <!--    UPDATE TESTSCENARIO'S   -->
+    <!--    TS-W-04   -->
+    <testcase id="put-Immunization-28531000087107"/>
+    <!--    GENERIC   -->
     <testcase id="put-Immunization"/>
 
+    <!-- BUNDLE TESTSCENARIO -->
+    <!-- testsuites are triggered by the proxy controller, so no testcase is needed -->
 
 </testsuite>
