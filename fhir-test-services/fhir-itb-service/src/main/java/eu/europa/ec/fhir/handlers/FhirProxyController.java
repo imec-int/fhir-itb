@@ -208,6 +208,7 @@ public class FhirProxyController {
 
             } catch (Exception e) {
                 LOGGER.warn("Failed to start test session(s) for testId {}: {}", testId, e.getMessage());
+                deferredRequest.resolve();
                 
 
                 //          In case of failure trigger the general suite to check for issues.
@@ -218,9 +219,9 @@ public class FhirProxyController {
                             resourceType.replace("/", "")
                     );
 
-                    LOGGER.info("Initiating general test session(s), testId:" + generalTestId);
+                    LOGGER.info("Initiating general test session(s), testId:" + testId.getKey().replaceAll("-[^-]*$", ""));
 
-                    var startSessionPayload = StartSessionRequestPayload.fromRequestParams(new String[]{testId.getKey()}, testId.getValue());
+                    var startSessionPayload = StartSessionRequestPayload.fromRequestParams(new String[]{testId.getKey().replaceAll("-[^-]*$", "")}, testId.getValue());
                     var itbResponse = itbRestClient.startSession(startSessionPayload);
                     var createdSessions = itbResponse.createdSessions();
                     var sessionId = createdSessions[0].session();
