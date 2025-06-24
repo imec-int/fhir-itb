@@ -117,7 +117,7 @@
         <assign to="reportResult">if ($stockLocation != "") then "SUCCESS" else "FAILURE"</assign>
         <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
         <assign to="report{jsonContent}">$extension</assign>
-        <assign to="report{expectedCode}">$expectedCode</assign>
+        <assign to="report{expectedCode}">"Verify stock location presence: '" || $stockLocation || "'"</assign>
         <!-- Use the DisplayProcessor to show the report. -->
         <process desc="Verify stock location presence" hidden="false" handler="DisplayProcessor">
             <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
@@ -137,6 +137,45 @@
                 "https://www.ehealth.fgov.be/standards/fhir/infsec/StructureDefinition/be-ext-pseudonymization"
             </input>
         </verify>
+
+
+        <!-- Recorder presence -->
+        <process handler="RegExpProcessor" output="recorder">
+            <operation>collect</operation>
+            <input name="input">$request{body}</input>
+            <input name="expression">'be-ext-recorder"[,\s"\w:\[{\/\.\-}\]]*"value"[\s]?:[\s]?"(\d*)"'</input>
+        </process>
+        <log>$recorder</log>
+        <assign to="reportResult">if ($recorder != "") then "SUCCESS" else "FAILURE"</assign>
+        <assign to="report{jsonContent}">$recorder</assign>
+        <assign to="report{expectedCode}">"Verify recorder presence: '" || $recorder || "'"</assign>
+        <!-- Use the DisplayProcessor to show the report. -->
+        <process desc="Verify recorder presence" hidden="false" handler="DisplayProcessor">
+            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
+            <input name="result">$reportResult</input>
+            <input name="parameters">$report</input>
+        </process>
+
+        <!-- Performer -->
+        <process handler="JSONPointerProcessor" operation="process" output="contained">
+            <input name="content">$request{body}</input>
+            <input name="pointer">"/performer"</input>
+        </process>
+        <assign to="fieldToCheck">"value"</assign>
+        <assign to="expression">'"' || $fieldToCheck || '"\s*:\s*"([^"]+)"'</assign>
+
+        <process handler="RegExpProcessor" output="performer">
+            <operation>collect</operation>
+            <input name="input">$contained</input>
+            <input name="expression">$expression</input>
+        </process>
+        <log>"Performer: " || $performer</log>
+
+        <verify handler="StringValidator" desc="Verify performer">
+            <input name="actualstring">$performer</input>
+            <input name="expectedstring">$recorder</input>
+        </verify>
+
 
         <!-- Note -->
         <process handler="JSONPointerProcessor" output="note">

@@ -29,7 +29,7 @@ services:
       - gitb.messaging.callbackURL=http://gitb-srv:8080/itbsrv/MessagingClient
 
   gitb-ui:
-    image: jungst46/gitb-ui-fhir-sandbox:latest
+    image: imechie/gitb-ui-fhir-sandbox:latest
     pull_policy: always
     restart: unless-stopped
     networks:
@@ -46,7 +46,7 @@ services:
         condition: service_started
 
   fhir-test-services:
-    image: jungst46/itb-fhir-test-services:latest
+    image: imechie/itb-fhir-test-services:latest
     pull_policy: always
     restart: unless-stopped
     networks:
