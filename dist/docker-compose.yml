@@ -44,6 +44,8 @@ services:
         condition: service_healthy
       gitb-srv:
         condition: service_started
+    environment:
+      - THEME=vitalink
 
   fhir-test-services:
     image: imechie/itb-fhir-test-services:latest
