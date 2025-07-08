@@ -1,1 +1,5 @@
 .idea
+
+# Immunization test suites
+test-suites/immunization-suite/
+test-suites/immunization-suite-INTEROP.zip

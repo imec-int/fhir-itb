@@ -92,6 +92,26 @@
             <input name="parameters">$report</input>
         </process>
 
+   
+
+        <!-- Recorder presence -->
+        <process handler="RegExpProcessor" output="recorder">
+            <operation>collect</operation>
+            <input name="input">$request{body}</input>
+            <input name="expression">'be-ext-recorder"[,\s"\w:\[{\/\.\-}\]]*"value"[\s]?:[\s]?"(\d*)"'</input>
+        </process>
+        <log>$recorder</log>
+        <assign to="reportResult">if ($recorder != "") then "SUCCESS" else "FAILURE"</assign>
+        <assign to="report{jsonContent}">$recorder</assign>
+        <assign to="report{expectedCode}">"Verify recorder presence: '" || $recorder || "'"</assign>
+        <!-- Use the DisplayProcessor to show the report. -->
+        <process desc="Verify recorder presence" hidden="false" handler="DisplayProcessor">
+            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
+            <input name="result">$reportResult</input>
+            <input name="parameters">$report</input>
+        </process>
+
+
         <!-- Presence of patient identifier -->
         <process handler="JSONPointerProcessor" output="patient">
             <input name="content">$request{body}</input>

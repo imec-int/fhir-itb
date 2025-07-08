@@ -10,7 +10,7 @@ services:
       - gitb
 
   gitb-mysql:
-    image: isaitb/gitb-mysql:1.24.0
+    image: isaitb/gitb-mysql:1.26.0
     restart: unless-stopped
     networks:
       - gitb
@@ -20,7 +20,7 @@ services:
       retries: 20
 
   gitb-srv:
-    image: isaitb/gitb-srv:1.24.0
+    image: isaitb/gitb-srv:1.26.0
     restart: unless-stopped
     networks:
       - gitb
@@ -29,7 +29,7 @@ services:
       - gitb.messaging.callbackURL=http://gitb-srv:8080/itbsrv/MessagingClient
 
   gitb-ui:
-    image: jungst46/gitb-ui-fhir-sandbox:latest
+    image: imechie/gitb-ui-fhir-sandbox:latest
     pull_policy: always
     restart: unless-stopped
     networks:
@@ -44,9 +44,11 @@ services:
         condition: service_healthy
       gitb-srv:
         condition: service_started
+    environment:
+      - THEME=vitalink
 
   fhir-test-services:
-    image: jungst46/itb-fhir-test-services:latest
+    image: imechie/itb-fhir-test-services:latest
     pull_policy: always
     restart: unless-stopped
     networks:

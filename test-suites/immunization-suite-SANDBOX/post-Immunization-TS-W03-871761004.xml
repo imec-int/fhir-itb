@@ -160,6 +160,23 @@
             <input name="expectedstring">"completed"</input>
         </verify>
 
+        <!-- Recorder presence -->
+        <process handler="RegExpProcessor" output="recorder">
+            <operation>collect</operation>
+            <input name="input">$request{body}</input>
+            <input name="expression">'be-ext-recorder"[,\s"\w:\[{\/\.\-}\]]*"value"[\s]?:[\s]?"(\d*)"'</input>
+        </process>
+        <log>$recorder</log>
+        <assign to="reportResult">if ($recorder != "") then "SUCCESS" else "FAILURE"</assign>
+        <assign to="report{jsonContent}">$recorder</assign>
+        <assign to="report{expectedCode}">"Verify recorder presence: '" || $recorder || "'"</assign>
+        <!-- Use the DisplayProcessor to show the report. -->
+        <process desc="Verify recorder presence" hidden="false" handler="DisplayProcessor">
+            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
+            <input name="result">$reportResult</input>
+            <input name="parameters">$report</input>
+        </process>
+
         <!-- Performer -->
         <process handler="JSONPointerProcessor" operation="process" output="contained">
             <input name="content">$request{body}</input>
@@ -174,17 +191,12 @@
             <input name="expression">$expression</input>
         </process>
         <log>"Performer: " || $performer</log>
-        <!-- Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" -->
-        <assign to="reportResult">if ($performer != "") then "SUCCESS" else "FAILURE"</assign>
-        <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
-        <assign to="report{jsonContent}">$performer</assign>
-        <assign to="report{expectedCode}">$expectedCode</assign>
-        <!-- Use the DisplayProcessor to show the report. -->
-        <process desc="Verify performer presence" hidden="false" handler="DisplayProcessor">
-            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
-            <input name="result">$reportResult</input>
-            <input name="parameters">$report</input>
-        </process>
+
+        <verify handler="StringValidator" desc="Verify performer">
+            <input name="actualstring">$performer</input>
+            <input name="expectedstring">$recorder</input>
+        </verify>
+
 
         <!-- Dose quantity-->
         <process handler="JSONPointerProcessor" output="doseQuantity">
