@@ -40,7 +40,7 @@ public class FhirProxyServiceHelper {
         return new RequestParams(
                 buildFhirURI(request, fhirProxyEndpoint, path),
                 HttpMethod.valueOf(request.getMethod()),
-                HttpUtils.cloneHeaders(request),
+                headers,
                 body
         );
     }
