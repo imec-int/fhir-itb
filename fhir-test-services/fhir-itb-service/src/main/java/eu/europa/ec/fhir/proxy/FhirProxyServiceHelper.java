@@ -34,6 +34,9 @@ public class FhirProxyServiceHelper {
     }
 
     public RequestParams toFhirHttpParams(HttpServletRequest request, String path, Optional<String> body) {
+        var headers = HttpUtils.cloneHeaders(request);
+        // Remove transfer-encoding header if present, since it may be set automatically and cause duplication.
+        headers.remove("transfer-encoding");
         return new RequestParams(
                 buildFhirURI(request, fhirProxyEndpoint, path),
                 HttpMethod.valueOf(request.getMethod()),

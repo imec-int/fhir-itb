@@ -35,7 +35,7 @@ services:
       # This is used to define how external services (the fhir-test-services component) will make callbacks on the
       # test engine. The address here must be what the fhir-test-services component should use for the calls.
       # If you deploy the fhir-test-services outside the docker-compose service you would need to adapt this. For
-      # example you would add a port mapping for port 8080 (this is currently not mapped to the host) and then
+      # example you would add a port mapping for port 8080 (this is currently not mapped to the hos·t) and then
       # refer to an address such as "localhost".
       - gitb.messaging.callbackURL=http://gitb-srv:8080/itbsrv/MessagingClient
 
