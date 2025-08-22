@@ -81,32 +81,44 @@
             <input name="expression">"$.extension[?(@.url=='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder')].valueReference.identifier[?(@.system=='https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin')].value "</input>
         </process>
         <assign to="recorder">if ($recorderDirect) then $recorderDirect else "null"</assign>
-
         <!-- Verify reference mention -->
         <process handler="JsonPathProcessor" operation="process" output="recorderReference">
             <input name="content">$request{body}</input>
             <input name="expression">"$.extension[?(@.url=='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder')].valueReference.reference"</input>
         </process>
         <assign to="recorder">if ($recorderReference) then $recorderReference else "null"</assign>
-
-        <log>"The recorder: " || $recorder</log>
-
-
-        <!-- Presence of patient identifier -->
-        <process handler="JSONPointerProcessor" output="patient">
-            <input name="content">$request{body}</input>
-            <input name="pointer">"/patient/identifier/_value/extension/0/url"</input>
+        <!-- Assign values according to found value -->
+        <assign to="reportResult">if ($recorder != "") then "SUCCESS" else "FAILURE"</assign>
+        <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
+        <assign to="report{recorder}">$recorder</assign>
+        <!-- Use the DisplayProcessor to show the report. -->
+        <process desc="Verify recorder presence" hidden="false" handler="DisplayProcessor">
+            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
+            <input name="result">$reportResult</input>
+            <input name="parameters">$report</input>
         </process>
 
-        <verify handler="StringValidator" desc="Verify patient presence">
-            <input name="actualstring">$patient</input>
-            <input name="expectedstring">"https://www.ehealth.fgov.be/standards/fhir/infsec/StructureDefinition/be-ext-pseudonymization"</input>
+        <!-- Presence of patient identifier -->
+        <process handler="JsonPathProcessor" operation="process" output="patient">
+            <input name="content">$request{body}</input>
+            <input name="expression">"$.patient.identifier.value"</input>
+        </process>
+        <process output="partialPseudo" handler="RegExpProcessor" operation="collect">
+            <input name="input">$patient</input>
+            <!-- Flags are passed in embedded format (e.g. case insensitive match). -->
+            <input name="expression">'^.{0,20}'</input>
+        </process>
+        <log>$partialPseudo</log>
+        <verify handler="ExpressionValidator" desc="Verify patient pseudonym presence">
+            <input name="expression">$patient != ""</input>
+            <input name="successMessage">'The pseudonym is present.' </input>
+            <input name="failureMessage">'The pseudonym is not present.'</input>
         </verify>
 
         <!-- Note -->
-        <process handler="JSONPointerProcessor" output="note">
+        <process handler="JsonPathProcessor" operation="process" output="note">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/note/0/text"</input>
+            <input name="expression">"$.note[*].text"</input>
         </process>
 
         <verify handler="StringValidator" desc="Verify note">
@@ -115,33 +127,17 @@
         </verify>
 
         <!-- Location -->
-        <process handler="JSONPointerProcessor" operation="process" output="contained">
+        <process handler="JsonPathProcessor" operation="process" output="location">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/contained"</input>
-        </process>
-        <assign to="fieldToCheck">"country"</assign>
-        <assign to="expression">'"address"[\s]*:[{\s]*"' || $fieldToCheck || '[\s:"]+([\w]+)"'</assign>
-
-        <process handler="RegExpProcessor" output="countryCode">
-            <operation>collect</operation>
-            <input name="input">$contained</input>
-            <input name="expression">$expression</input>
-        </process>
-        <log> "field 2: " || $countryCode</log>
-        <!-- Extract value as before (no change here) - END -->
-        <assign to="expectedCode">"BE"</assign>
-        <!-- Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" -->
-        <assign to="reportResult">if ($countryCode = $expectedCode) then "SUCCESS" else "FAILURE"</assign>
-        <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
-        <assign to="report{jsonContent}">$contained</assign>
-        <assign to="report{expectedCode}">$expectedCode</assign>
-        <!-- Use the DisplayProcessor to show the report. -->
-        <process desc="Verify location code" hidden="false" handler="DisplayProcessor">
-            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
-            <input name="result">$reportResult</input>
-            <input name="parameters">$report</input>
+            <input name="expression">"$.contained[?(@.resourceType=='Location')].address.country"</input>
         </process>
 
+        <verify handler="StringValidator" desc="Verify location">
+            <input name="actualstring">$location</input>
+            <input name="expectedstring">"BE"</input>
+        </verify>
+
+        <!-- TODO: As from here, work to do-->
         <!-- Status -->
         <process handler="JSONPointerProcessor" output="status">
             <input name="content">$request{body}</input>
