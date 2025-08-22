@@ -53,9 +53,9 @@
 <!--        </verify>-->
 
         <!-- Administration route -->
-        <process handler="JSONPointerProcessor" output="administrationRoute">
+        <process handler="JsonPathProcessor" operation="process" output="administrationRoute">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/route/coding/0/code"</input>
+            <input name="expression">"$.route.coding[*].code"</input>
         </process>
 
         <verify handler="StringValidator" desc="Verify administration route">
@@ -65,36 +65,17 @@
 
         <!-- Extract value as before (no change here) - START -->
         <!-- Administered product -->
-        <process handler="JSONPointerProcessor" operation="process" output="extension">
+        <process handler="JsonPathProcessor" operation="process" output="administeredProductCode">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/extension"</input>
+            <input name="expression">"$.extension[?(@.url=='https://www.ehealth.fgov.be/standards/fhir/vaccination/StructureDefinition/be-ext-administeredProduct')].extension[?(@.url=='coded')].valueCodeableConcept.coding[*].code"</input>
         </process>
-        <log>$extension</log>
-        <assign to="fieldToCheck">"code"</assign>
-        <assign to="expression">'"url"[\s]:[\s]+".+\/be-ext-administeredProduct"[,\s"\w:\[{\/\.\-}\]]+"' || $fieldToCheck || '"[\s]:[\s]+"(.+)"'</assign>
-        <process handler="RegExpProcessor" output="administeredProductCode">
-            <operation>collect</operation>
-            <input name="input">$extension</input>
-            <input name="expression">$expression</input>
-        </process>
-        <log>$administeredProductCode</log>
-        <!-- Extract value as before (no change here) - END -->
-        <assign to="expectedCode">"2285575"</assign>
-        <!-- Replace the previous validator with a simple assign step that returns "SUCCESS" or "FAILURE" -->
-        <assign to="reportResult">if ($administeredProductCode = $expectedCode) then "SUCCESS" else "FAILURE"</assign>
-        <!-- Prepare the report that you want to display (we add here the JSON content and the code value you are expecting) -->
-        <assign to="report{jsonContent}">$extension</assign>
-        <assign to="report{expectedCode}">$expectedCode</assign>
-        <!-- Use the DisplayProcessor to show the report. -->
-        <process desc="Verify administered product code" hidden="false" handler="DisplayProcessor">
-            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
-            <input name="result">$reportResult</input>
-            <input name="parameters">$report</input>
-        </process>
-
-   
+        <verify handler="StringValidator" desc="Verify administered product">
+            <input name="actualstring">$administeredProductCode</input>
+            <input name="expectedstring">"2285575"</input>
+        </verify>
 
         <!-- Recorder presence -->
+        <!-- Verify direct mention-->
         <process handler="RegExpProcessor" output="recorder">
             <operation>collect</operation>
             <input name="input">$request{body}</input>
