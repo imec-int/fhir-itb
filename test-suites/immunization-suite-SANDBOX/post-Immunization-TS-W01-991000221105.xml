@@ -76,21 +76,20 @@
 
         <!-- Recorder presence -->
         <!-- Verify direct mention-->
-        <process handler="RegExpProcessor" output="recorder">
-            <operation>collect</operation>
-            <input name="input">$request{body}</input>
-            <input name="expression">'be-ext-recorder"[,\s"\w:\[{\/\.\-}\]]*"value"[\s]?:[\s]?"(\d*)"'</input>
+        <process handler="JsonPathProcessor" operation="process" output="recorderDirect">
+            <input name="content">$request{body}</input>
+            <input name="expression">"$.extension[?(@.url=='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder')].valueReference.identifier[?(@.system=='https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin')].value "</input>
         </process>
-        <log>$recorder</log>
-        <assign to="reportResult">if ($recorder != "") then "SUCCESS" else "FAILURE"</assign>
-        <assign to="report{jsonContent}">$recorder</assign>
-        <assign to="report{expectedCode}">"Verify recorder presence: '" || $recorder || "'"</assign>
-        <!-- Use the DisplayProcessor to show the report. -->
-        <process desc="Verify recorder presence" hidden="false" handler="DisplayProcessor">
-            <!-- The DisplayProcessor supports a "result" input to determine whether its a success, failure or undefined -->
-            <input name="result">$reportResult</input>
-            <input name="parameters">$report</input>
+        <assign to="recorder">if ($recorderDirect) then $recorderDirect else "null"</assign>
+
+        <!-- Verify reference mention -->
+        <process handler="JsonPathProcessor" operation="process" output="recorderReference">
+            <input name="content">$request{body}</input>
+            <input name="expression">"$.extension[?(@.url=='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder')].valueReference.reference"</input>
         </process>
+        <assign to="recorder">if ($recorderReference) then $recorderReference else "null"</assign>
+
+        <log>"The recorder: " || $recorder</log>
 
 
         <!-- Presence of patient identifier -->
