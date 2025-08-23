@@ -137,11 +137,10 @@
             <input name="expectedstring">"BE"</input>
         </verify>
 
-        <!-- TODO: As from here, work to do-->
         <!-- Status -->
-        <process handler="JSONPointerProcessor" output="status">
+        <process handler="JsonPathProcessor" operation="process" output="status">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/status"</input>
+            <input name="expression">"$.status"</input>
         </process>
 
         <verify handler="StringValidator" desc="Verify status">
@@ -150,20 +149,20 @@
         </verify>
 
         <!-- Dose quantity-->
-        <process handler="JSONPointerProcessor" output="doseQuantity">
+        <process handler="JsonPathProcessor" operation="process" output="doseQuantity">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/doseQuantity/value"</input>
+            <input name="expression">"$.doseQuantity.value"</input>
         </process>
 
         <verify handler="StringValidator" desc="Verify dose quantity">
-            <input name="actualstring">$doseQuantity</input>
+            <input name="actualstring">"" || $doseQuantity</input>
             <input name="expectedstring">"1"</input>
         </verify>
 
         <!-- Body site -->
-        <process handler="JSONPointerProcessor" output="bodySite">
+        <process handler="JsonPathProcessor" operation="process" output="bodySite">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/site/coding/0/code"</input>
+            <input name="expression">"$.site.coding.[*].code"</input>
         </process>
 
         <verify handler="StringValidator" desc="Verify body site">
@@ -172,9 +171,9 @@
         </verify>
 
         <!-- Body laterality -->
-        <process handler="JSONPointerProcessor" output="bodyLaterality">
+        <process handler="JsonPathProcessor" operation="process" output="bodyLaterality">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/site/extension/0/valueCoding/code"</input>
+            <input name="expression">"$.site.extension.[*].valueCoding.code"</input>
         </process>
 
         <verify handler="StringValidator" desc="Verify body laterality">
@@ -183,9 +182,9 @@
         </verify>
 
         <!-- Reason code-->
-        <process handler="JSONPointerProcessor" output="reasonCode">
+        <process handler="JsonPathProcessor" operation="process" output="reasonCode">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/reasonCode/0/coding/0/code"</input>
+            <input name="expression">"$.reasonCode.[*].coding.[*].code"</input>
         </process>
 
         <verify handler="StringValidator" desc="Verify reason code">
@@ -194,9 +193,9 @@
         </verify>
 
         <!-- OccurrenceDateTime timestamp-->
-        <process handler="JSONPointerProcessor" output="occurenceTimestamp">
+        <process handler="JsonPathProcessor" operation="process" output="occurenceTimestamp">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/occurrenceDateTime"</input>
+            <input name="expression">"$.occurrenceDateTime</input>
         </process>
 
         <verify handler="RegExpValidator" desc="Verify occurrenceDateTime timestamp">
@@ -205,9 +204,9 @@
         </verify>
 
         <!-- Recorded timestamp-->
-        <process handler="JSONPointerProcessor" output="recordedTimestamp">
+        <process handler="JsonPathProcessor" operation="process" output="recordedTimestamp">
             <input name="content">$request{body}</input>
-            <input name="pointer">"/recorded"</input>
+            <input name="expression">"$.recorder</input>
         </process>
 
         <verify handler="RegExpValidator" desc="Verify recorded timestamp">
