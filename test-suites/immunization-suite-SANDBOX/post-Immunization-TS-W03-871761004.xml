@@ -151,8 +151,9 @@
         </process>
 
 
-        <!-- TODO: Work as from here, fix performer for direct and reference location
+        <!-- TODO: Work as from here, fix performer for direct and reference location -->
         <!-- Performer -->
+        <!-- Verify direct mention -->
         <process handler="JsonPathProcessor" operation="process" output="recorderDirect">
             <input name="content">$request{body}</input>
             <input name="expression">"$.extension[?(@.url=='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder')].valueReference.identifier[?(@.system=='https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin' || @.system=='https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/cbe' || @.system=='https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi')].value "</input>
