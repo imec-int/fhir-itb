@@ -78,7 +78,7 @@
         <!-- Verify direct mention-->
         <process handler="JsonPathProcessor" operation="process" output="recorderDirect">
             <input name="content">$request{body}</input>
-            <input name="expression">"$.extension[?(@.url=='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder')].valueReference.identifier[?(@.system=='https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin')].value "</input>
+            <input name="expression">"$.extension[?(@.url=='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder')].valueReference.identifier[?(@.system=='https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin' || @.system=='https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/cbe' || @.system=='https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi')].value "</input>
         </process>
         <assign to="recorder">if ($recorderDirect) then $recorderDirect else "null"</assign>
         <!-- Verify reference mention -->
@@ -195,7 +195,7 @@
         <!-- OccurrenceDateTime timestamp-->
         <process handler="JsonPathProcessor" operation="process" output="occurenceTimestamp">
             <input name="content">$request{body}</input>
-            <input name="expression">"$.occurrenceDateTime</input>
+            <input name="expression">"$.occurrenceDateTime"</input>
         </process>
 
         <verify handler="RegExpValidator" desc="Verify occurrenceDateTime timestamp">
@@ -206,7 +206,7 @@
         <!-- Recorded timestamp-->
         <process handler="JsonPathProcessor" operation="process" output="recordedTimestamp">
             <input name="content">$request{body}</input>
-            <input name="expression">"$.recorder</input>
+            <input name="expression">"$.recorded"</input>
         </process>
 
         <verify handler="RegExpValidator" desc="Verify recorded timestamp">
