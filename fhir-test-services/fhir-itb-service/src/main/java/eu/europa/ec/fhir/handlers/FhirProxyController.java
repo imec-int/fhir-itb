@@ -102,144 +102,125 @@ public class FhirProxyController {
 
     //private String get
 
-    @RequestMapping({"/proxy", "/proxy/*", "/proxy/*/{id}"})
+    @RequestMapping({
+            "/proxy",                                    // system-level (e.g., Bundle POST)
+            "/proxy/{resourceType}",                     // e.g., /proxy/Patient?name=...
+            "/proxy/{resourceType}/",                    // trailing slash
+            "/proxy/{resourceType}/{id}",                // e.g., /proxy/Patient/123
+            "/proxy/{resourceType}/_search",             // POST-based search
+            "/proxy/{resourceType}/_search/"             // trailing slash
+    })
     public DeferredResult<ResponseEntity<String>> handleRequest(
             HttpServletRequest request,
-            //@PathVariable(value = "resourceType", required = false) String resourceType,
-            @PathVariable(value = "id", required = false) Optional<String> resourceId,
+            @PathVariable(value = "resourceType", required = false) Optional<String> resourceTypeOpt,
+            @PathVariable(value = "id",           required = false) Optional<String> resourceId,
             @RequestBody(required = false) Optional<String> payload
     ) {
-
-        // Retrieving the resourceType from the json payload
-        String resourceType = payload.map(body -> getResourceTypeFromJson(body, "resourceType")).orElse("");
-
-        RequestParams proxyRequestParams = null;
-        
-
-        LOGGER.info("Checking resourceType for Bundle");
-        LOGGER.info("Resource type from json \"{}\"", resourceType);
+        RequestParams proxyRequestParams;
         List<Map.Entry<String, RequestParams>> testIds = new ArrayList<>();
 
-        if ("Bundle".equals(resourceType)) {
+        // Detect if this is a Bundle (system-level POST)
+        String resourceTypeFromBody = payload.map(b -> getResourceTypeFromJson(b, "resourceType")).orElse("");
+        boolean isBundle = "Bundle".equals(resourceTypeFromBody);
 
-            // loop through all entries in the bundle
+        // Resolve resourceType: prefer path variable, fall back to body only for Bundle
+        String resourceType = resourceTypeOpt.orElse(isBundle ? "Bundle" : "");
+
+        // Special handling for POST /{type}/_search (body is usually form-encoded, not JSON)
+        boolean isPostSearch = request.getRequestURI().matches(".*/_search/?$");
+
+        if (isBundle) {
+            // Your existing bundle logic (unchanged)
             try {
-                JsonNode root = objectMapper.readTree(payload.get());
+                JsonNode root = objectMapper.readTree(payload.orElse("{}"));
                 JsonNode entries = root.at(this.fhirRefCodes.get("entry").get());
-                
                 if (entries.isArray()) {
                     for (JsonNode entry : entries) {
-                        String method = "";
-                        String entryResourceType = "";
-                        String vaccineCode = "";
-                        
-                        // Get resource type for each entry
                         JsonNode resourceNode = entry.get("resource");
-                        if (resourceNode != null && resourceNode.has("resourceType")) {
-                            entryResourceType = resourceNode.get("resourceType").asText();
-                            LOGGER.info("Found entry with resource type: {}", entryResourceType);
-                            
-                            // Get vaccine code if resource type is Immunization
-                            if (resourceNode.has("vaccineCode")) {
-                                JsonNode vaccineCodeNode = resourceNode.get("vaccineCode");
-                                if (vaccineCodeNode.has("coding")) {
-                                    JsonNode codingArray = vaccineCodeNode.get("coding");
-                                    if (codingArray.isArray() && codingArray.size() > 0) {
-                                        JsonNode firstCoding = codingArray.get(0);
-                                        if (firstCoding.has("code")) {
-                                            vaccineCode = firstCoding.get("code").asText();
-                                            LOGGER.info("Found vaccine code: {}", vaccineCode);
-                                        }
-                                    }
-                                }
+                        String entryResourceType = resourceNode != null && resourceNode.has("resourceType")
+                                ? resourceNode.get("resourceType").asText()
+                                : "";
+
+                        String method = Optional.ofNullable(entry.get("request"))
+                                .map(r -> r.get("method"))
+                                .map(JsonNode::asText)
+                                .map(String::toLowerCase)
+                                .orElse("");
+
+                        String vaccineCode = "";
+                        if (resourceNode != null && resourceNode.has("vaccineCode")) {
+                            JsonNode coding = resourceNode.path("vaccineCode").path("coding");
+                            if (coding.isArray() && coding.size() > 0) {
+                                vaccineCode = coding.get(0).path("code").asText("");
                             }
                         }
 
-                        // Get request method and URL for each entry
-                        JsonNode requestNode = entry.get("request");
-                        if (requestNode != null) {
-                            if (requestNode.has("method")) {
-                                method = requestNode.get("method").asText().toLowerCase();
-                                LOGGER.info("Found request method: {}", method);
-                            }
-                        }
-
-                        testIds.add(new AbstractMap.SimpleEntry<>(method + "-" + entryResourceType + "-" + vaccineCode, fhirProxyServiceHelper.toFhirHttpParams(request, "", Optional.of(resourceNode.toString()))));
-                        LOGGER.info("Test ID: {}", method + "-" + entryResourceType + "-" + vaccineCode);
+                        testIds.add(new AbstractMap.SimpleEntry<>(
+                                method + "-" + entryResourceType + "-" + vaccineCode,
+                                fhirProxyServiceHelper.toFhirHttpParams(request, "", Optional.ofNullable(resourceNode).map(JsonNode::toString))
+                        ));
                     }
                 }
             } catch (JsonProcessingException e) {
                 LOGGER.warn("Failed to parse Bundle entries: {}", e.getMessage());
             }
-
             proxyRequestParams = fhirProxyServiceHelper.toFhirHttpParams(request, "", payload);
 
-
         } else {
-            Optional<String> referenceCode = payload.flatMap(body -> getReferenceCode(body, resourceType));
+            if (resourceType.isBlank()) {
+                // We could not determine the resource type; this causes the “actor” error downstream.
+                // Bail out early with a clear log (or consider mapping to a default/“general” actor).
+                LOGGER.warn("Resource type is missing. Ensure @RequestMapping uses {resourceType} instead of *.");
+            }
 
-            String fullPath = String.format("%s%s", resourceType, resourceId.map(value -> "/" + value).orElse(""));
+            // Build the path passed to the proxy target (/Patient, /Patient/123, /Patient/_search, etc.)
+            String fullPath;
+            if (isPostSearch) {
+                fullPath = resourceType + "/_search";
+            } else if (resourceId.isPresent()) {
+                fullPath = resourceType + "/" + resourceId.get();
+            } else {
+                fullPath = resourceType; // e.g., GET /Patient?name=...
+            }
+
             proxyRequestParams = fhirProxyServiceHelper.toFhirHttpParams(request, fullPath, payload);
 
-            testIds.add(new AbstractMap.SimpleEntry<>(String.format("%s-%s%s",
+            Optional<String> referenceCode = payload.flatMap(body -> getReferenceCode(body, resourceType));
+            String testKey = String.format("%s-%s%s",
                     proxyRequestParams.method().toString().toLowerCase(),
                     resourceType.replace("/", ""),
-                    referenceCode.map(code -> "-" + code).orElse("")), proxyRequestParams));
+                    referenceCode.map(code -> "-" + code).orElse("")
+            );
+            testIds.add(new AbstractMap.SimpleEntry<>(testKey, proxyRequestParams));
         }
 
-
-        
-
         LOGGER.info("Starting test session(s) for \"{}\"", testIds);
-        // forwards the request to the FHIR ACC server.
         var deferredResult = new DeferredResult<ResponseEntity<String>>();
         var deferredRequest = new DeferredRequest(proxyRequestParams, deferredResult);
 
-        for (Entry<String, RequestParams> testId : testIds) {
+        for (Map.Entry<String, RequestParams> testId : testIds) {
             try {
-                // start test sessions and defer the request
-                var startSessionPayload = StartSessionRequestPayload.fromRequestParams(new String[]{testId.getKey()}, testId.getValue());
+                var startSessionPayload = StartSessionRequestPayload.fromRequestParams(
+                        new String[]{testId.getKey()}, testId.getValue());
                 var itbResponse = itbRestClient.startSession(startSessionPayload);
-                var createdSessions = itbResponse.createdSessions();
-                var sessionId = createdSessions[0].session();
-
-                LOGGER.info("Test session(s) created: {}", (Object[]) createdSessions);
+                var sessionId = itbResponse.createdSessions()[0].session();
                 deferredRequests.put(sessionId, deferredRequest);
-
             } catch (Exception e) {
                 LOGGER.warn("Failed to start test session(s) for testId {}: {}", testId, e.getMessage());
                 deferredRequest.resolve();
-                
-
-                //          In case of failure trigger the general suite to check for issues.
-                //          No code included, method - resourceType only
                 try {
-                    String generalTestId = String.format("%s-%s",
-                            proxyRequestParams.method().toString().toLowerCase(),
-                            resourceType.replace("/", "")
-                    );
-
-                    LOGGER.info("Initiating general test session(s), testId:" + testId.getKey().replaceAll("-[^-]*$", ""));
-
-                    var startSessionPayload = StartSessionRequestPayload.fromRequestParams(new String[]{testId.getKey().replaceAll("-[^-]*$", "")}, testId.getValue());
+                    var startSessionPayload = StartSessionRequestPayload.fromRequestParams(
+                            new String[]{testId.getKey().replaceAll("-[^-]*$", "")}, testId.getValue());
                     var itbResponse = itbRestClient.startSession(startSessionPayload);
-                    var createdSessions = itbResponse.createdSessions();
-                    var sessionId = createdSessions[0].session();
-
-                    LOGGER.info("Test session(s) created: {}", (Object[]) createdSessions);
+                    var sessionId = itbResponse.createdSessions()[0].session();
                     deferredRequests.put(sessionId, deferredRequest);
-
                 } catch (Exception ec) {
                     LOGGER.warn("Failed to start general test session(s): {}", ec.getMessage());
                     deferredRequest.resolve();
                 }
             }
-
-            
         }
 
         return deferredResult;
-
-        
     }
 }
