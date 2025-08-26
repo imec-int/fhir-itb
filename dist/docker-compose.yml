@@ -10,7 +10,7 @@ services:
       - gitb
 
   gitb-mysql:
-    image: isaitb/gitb-mysql:1.26.0
+    image: isaitb/gitb-mysql:nightly
     restart: unless-stopped
     networks:
       - gitb
@@ -20,7 +20,7 @@ services:
       retries: 20
 
   gitb-srv:
-    image: isaitb/gitb-srv:1.26.0
+    image: isaitb/gitb-srv:nightly
     restart: unless-stopped
     networks:
       - gitb
