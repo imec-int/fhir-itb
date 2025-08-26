@@ -10,7 +10,7 @@ services:
       - gitb
 
   gitb-mysql:
-    image: isaitb/gitb-mysql:nightly
+    image: imechie/gitb-mysql:nightly-20082025
     restart: unless-stopped
     networks:
       - gitb
@@ -29,7 +29,7 @@ services:
       - gitb.messaging.callbackURL=http://gitb-srv:8080/itbsrv/MessagingClient
 
   gitb-ui:
-    image: imechie/gitb-ui-fhir-sandbox:latest
+    image: imechie/gitb-ui:nightly-20082025
     pull_policy: always
     restart: unless-stopped
     networks:

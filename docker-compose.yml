@@ -14,7 +14,7 @@ services:
 
   gitb-mysql:
     # The Test Bed's DB.
-    image: isaitb/gitb-mysql:nightly
+    image: imechie/gitb-mysql:nightly-20082025
     restart: unless-stopped
     volumes:
       - gitb-dbdata:/var/lib/mysql
@@ -29,7 +29,7 @@ services:
     # The test engine that executes the test sessions.
     # Note that this (and the gitb-ui container) point to the "nightly" tag which receives updates based on our
     # development branch. In production this would be "latest" or a fixed release tag.
-    image: isaitb/gitb-srv:nightly
+    image: imechie/gitb-srv:nightly-20082025
     restart: unless-stopped
     environment:
       # This is used to define how external services (the fhir-test-services component) will make callbacks on the
@@ -41,7 +41,7 @@ services:
 
   gitb-ui:
     # The Test Bed's UI.
-    image: isaitb/gitb-ui:nightly
+    image: imechie/gitb-ui:nightly-20082025
     restart: unless-stopped
     # This is the only Test Bed component for which we currently add a host port mapping. If port 9000 on your
     # host is taken just replace "9000:9000" with say "9001:9000".
