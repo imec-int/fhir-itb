@@ -25,6 +25,8 @@ services:
       interval: 3s
       retries: 10
 
+
+
   gitb-srv:
     # The test engine that executes the test sessions.
     # Note that this (and the gitb-ui container) point to the "nightly" tag which receives updates based on our
