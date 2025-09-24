@@ -3,6 +3,7 @@ package eu.europa.ec.fhir.proxy;
 import eu.europa.ec.fhir.http.RequestParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.context.request.async.DeferredResult;
@@ -71,8 +72,29 @@ public class DeferredRequest {
             result = ResponseEntity.status(500).body("Failed to proxy request");
         }
 
-        deferredResult.setResult(result);
-        return result;
+        // deferredResult.setResult(result);
+        // return result;
+
+        // Additiona logging
+        LOGGER.info("Result headers: {}", result.getHeaders());
+
+        // Remove the transfer-encoding header, as it is set automatically and causes duplication.
+        HttpHeaders cleanedHeaders = new HttpHeaders();
+        result.getHeaders().forEach((key, values) -> {
+            if (!"transfer-encoding".equalsIgnoreCase(key)) {
+                cleanedHeaders.put(key, values);
+            }
+        });
+        ResponseEntity<String> cleanedResult = new ResponseEntity<>(
+            result.getBody(),
+            cleanedHeaders,
+            result.getStatusCode()
+        );
+
+        LOGGER.info("Cleaned result headers: {}", cleanedResult.getHeaders());
+
+        deferredResult.setResult(cleanedResult);
+        return cleanedResult;
     }
 
 }
