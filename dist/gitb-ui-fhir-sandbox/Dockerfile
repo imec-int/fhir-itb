@@ -1,4 +1,4 @@
-FROM isaitb/gitb-ui:1.24.0
+FROM isaitb/gitb-ui:1.28.0
 
 COPY config/data /gitb-repository/data/in/
 
