@@ -42,13 +42,52 @@ public class FhirProxyController {
     private final DeferredRequestMapper deferredRequests;
 
     private final FhirRefCodes fhirRefCodes;
+    private final RestClient restClient;
 
     public FhirProxyController(FhirRefCodes fhirRefCodes, ItbRestClient itbRestClient, FhirProxyServiceHelper fhirProxyServiceHelper, DeferredRequestMapper deferredRequests, RestClient restClient, ObjectMapper objectMapper) {
         this.fhirRefCodes = fhirRefCodes;
         this.itbRestClient = itbRestClient;
         this.fhirProxyServiceHelper = fhirProxyServiceHelper;
         this.deferredRequests = deferredRequests;
+        this.restClient = restClient;
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * Extracts the path to forward to ACC from the request URI (path after context path and "/proxy").
+     * E.g. /fhir/proxy/AllergyIntolerance/123 -> AllergyIntolerance/123
+     */
+    private String getPathAfterProxy(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        String afterContext = uri.startsWith(contextPath) ? uri.substring(contextPath.length()) : uri;
+        String path = afterContext.replaceFirst("^/proxy/?", "").replaceFirst("^/", "");
+        return path;
+    }
+
+    /**
+     * Forwards a GET request to the ACC and returns the ACC response to the caller.
+     */
+    private DeferredResult<ResponseEntity<String>> forwardGetToAcc(HttpServletRequest request) {
+        String path = getPathAfterProxy(request);
+        RequestParams params = fhirProxyServiceHelper.toFhirHttpParams(request, path, Optional.empty());
+        var deferredResult = new DeferredResult<ResponseEntity<String>>();
+        var deferredRequest = new DeferredRequest(params, deferredResult);
+        deferredRequest.resolve();
+        return deferredResult;
+    }
+
+    /**
+     * Forwards a POST request to the ACC and returns the ACC response to the caller.
+     * Used for endpoints like *_search where no test case is executed.
+     */
+    private DeferredResult<ResponseEntity<String>> forwardPostToAcc(HttpServletRequest request, Optional<String> payload) {
+        String path = getPathAfterProxy(request);
+        RequestParams params = fhirProxyServiceHelper.toFhirHttpParams(request, path, payload);
+        var deferredResult = new DeferredResult<ResponseEntity<String>>();
+        var deferredRequest = new DeferredRequest(params, deferredResult);
+        deferredRequest.resolve();
+        return deferredResult;
     }
 
     /**
@@ -109,6 +148,18 @@ public class FhirProxyController {
             @PathVariable(value = "id", required = false) Optional<String> resourceId,
             @RequestBody(required = false) Optional<String> payload
     ) {
+
+        // GET: forward directly to ACC and return its response to the requester
+        if ("GET".equalsIgnoreCase(request.getMethod())) {
+            LOGGER.info("Forwarding GET request to ACC");
+            return forwardGetToAcc(request);
+        }
+
+        // POST with path containing "_search": forward directly to ACC, no test case
+        if ("POST".equalsIgnoreCase(request.getMethod()) && getPathAfterProxy(request).contains("_search")) {
+            LOGGER.info("Forwarding POST _search request to ACC (no test case)");
+            return forwardPostToAcc(request, payload);
+        }
 
         // Retrieving the resourceType from the json payload
         String resourceType = payload.map(body -> getResourceTypeFromJson(body, "resourceType")).orElse("");
