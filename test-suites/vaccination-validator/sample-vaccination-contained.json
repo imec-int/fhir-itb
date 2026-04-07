@@ -1,0 +1,72 @@
+{
+  "resourceType": "Immunization",
+  "id": "example-be-vaccination-contained",
+  "status": "completed",
+  "patient": {
+    "reference": "Patient/example"
+  },
+  "occurrenceDateTime": "2025-03-15",
+  "recorded": "2025-03-15",
+  "contained": [
+    {
+      "resourceType": "Practitioner",
+      "id": "pract-1",
+      "identifier": [
+        {
+          "system": "https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi",
+          "value": "12345678"
+        }
+      ],
+      "name": [
+        {
+          "family": "Janssens",
+          "given": ["Pieter"]
+        }
+      ]
+    }
+  ],
+  "extension": [
+    {
+      "url": "https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder",
+      "valueReference": {
+        "identifier": {
+          "system": "https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi",
+          "value": "12345678"
+        }
+      }
+    },
+    {
+      "url": "https://www.ehealth.fgov.be/standards/fhir/vaccination/StructureDefinition/be-ext-administeredProduct",
+      "extension": [
+        {
+          "url": "coded",
+          "valueCodeableConcept": {
+            "coding": [
+              {
+                "system": "https://www.ehealth.fgov.be/standards/fhir/medication/NamingSystem/cnk-codes",
+                "code": "0061358",
+                "display": "Engerix B 20"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "vaccineCode": {
+    "coding": [
+      {
+        "system": "http://snomed.info/sct",
+        "code": "871822003",
+        "display": "Hepatitis B vaccine"
+      }
+    ]
+  },
+  "performer": [
+    {
+      "actor": {
+        "reference": "#pract-1"
+      }
+    }
+  ]
+}

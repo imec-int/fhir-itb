@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testcase id="tc-client-001-client-submission-with-monitor-approval" xmlns="http://www.gitb.com/tdl/v1/">
+  <metadata>
+    <title>tc-client-001 Client submission with monitor approval</title>
+    <description>Client submits and monitor validates an allergy</description>
+    <version>1.0</version>
+  </metadata>
+
+  <actors>
+    <actor id="client" name="Test Client" type="SUT"/>
+    <actor id="server" name="Validation Service" type="SERVICE"/>
+  </actors>
+
+  <steps>
+    <call path="scriptlets/setupData.xml">
+      <input name="ingestData">Y</input>
+      <input name="serverApiRoot">$SYSTEM{serverApiRoot}</input>
+    </call>
+    <call path="scriptlets/createAllergy.xml" output="createdAllergy">
+      <input name="resourceType"></input>
+      <input name="codeCode"></input>
+      <input name="codeDisplay"></input>
+      <input name="codeText"></input>
+      <input name="reactionCode"></input>
+      <input name="reactionDisplay"></input>
+    </call>
+    <call path="scriptlets/submitAllergy.xml" output="submitResult">
+      <input name="content">$createdAllergy{content}</input>
+    </call>
+    <verify handler="StringValidator" desc="Verify 201 Created">
+      <input name="actualstring">$submitResult{status}</input>
+      <input name="expectedstring">&quot;201&quot;</input>
+    </verify>
+    <process handler="FHIRValidator" operation="validate" output="validationOutcome">
+      <input name="content">$submitResult{payload}</input>
+      <input name="profileUrl">&quot;http://hl7.org/fhir/StructureDefinition/AllergyIntolerance&quot;</input>
+    </process>
+    <process handler="ValidationResultsProcessor" operation="summarize" output="validationSummary">
+      <input name="outcome">$validationOutcome</input>
+    </process>
+    <verify handler="StringValidator" desc="Errors count">
+      <input name="actualstring">$validationSummary{errors}</input>
+      <input name="expectedstring">&quot;0&quot;</input>
+    </verify>
+    <verify handler="StringValidator" desc="Warnings count">
+      <input name="actualstring">$validationSummary{warnings}</input>
+      <input name="expectedstring">&quot;0&quot;</input>
+    </verify>
+    <process handler="FHIRPathProcessor" operation="evaluate" output="$2">
+      <input name="content">$submitResult{payload}</input>
+      <input name="expression">&quot;AllergyIntolerance.code.coding.where(system='http://snomed.info/sct').code&quot;</input>
+    </process>
+    <call path="scriptlets/instructUser.xml">
+      <input name="step">&quot;informMonitor&quot;</input>
+      <input name="message">&quot;Please review the submission&quot;</input>
+    </call>
+    <process handler="MonitorApprovalProcessor" operation="await" output="monitorDecision">
+      <input name="timeoutSeconds">60</input>
+    </process>
+    <process handler="MonitorApprovalProcessor" operation="await" output="monitorDecision">
+      <input name="timeoutSeconds">60</input>
+    </process>
+    <verify handler="StringValidator" desc="Verify monitor decision">
+      <input name="actualstring">$monitorDecision</input>
+      <input name="expectedstring">&quot;Pass&quot;</input>
+    </verify>
+  </steps>
+</testcase>
