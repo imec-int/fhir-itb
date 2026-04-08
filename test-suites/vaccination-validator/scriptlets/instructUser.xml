@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scriptlet id="instructUser"
+            xmlns="http://www.gitb.com/tdl/v1/"
+            xmlns:gitb="http://www.gitb.com/core/v1/">
+  <params>
+    <var name="step" type="string"/>
+    <var name="message" type="string"/>
+  </params>
+  <steps>
+    <log>"Scriptlet instructUser executed (stub)."</log>
+  </steps>
+</scriptlet>

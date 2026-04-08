@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testcase id="be-vaccination-001-validate-bevaccination-business-rules"
+          xmlns="http://www.gitb.com/tdl/v1/"
+          xmlns:gitb="http://www.gitb.com/core/v1/">
+  <metadata>
+    <gitb:name>be-vaccination-001 Validate BeVaccination business rules</gitb:name>
+    <gitb:version>1.0</gitb:version>
+    <gitb:description>Belgian Vaccination (BeVaccination) profile validation</gitb:description>
+  </metadata>
+
+  <actors>
+    <gitb:actor id="User" role="SUT"/>
+    <gitb:actor id="FHIRValidator"/>
+  </actors>
+
+  <variables>
+    <var name="immunizationResource" type="string"/>
+    <var name="loadIGSeverity" type="string"/>
+    <var name="assertedResourceType" type="string"/>
+    <var name="fhirpathBody" type="string"/>
+    <var name="fhirpathResult" type="string"/>
+    <var name="cnkCode" type="string"/>
+    <var name="lastRequest" type="map"/>
+    <var name="fhirValidatorHeaders" type="map"/>
+    <var name="fhirpathTplParams" type="map"/>
+    <var name="FHIRValidatorBase" type="string"/>
+    <var name="expectedSnomed" type="string"/>
+  </variables>
+
+  <steps stopOnError="true">
+    <assign to="FHIRValidatorBase">&quot;http://itb-fhir-validator:8081&quot;</assign>
+    <assign to="fhirValidatorHeaders{Content-Type}">&quot;application/json&quot;</assign>
+    <assign to="fhirValidatorHeaders{Accept}">&quot;application/json&quot;</assign>
+    <send id="lastRequest" desc="Load IG into FHIR Validator" handler="HttpMessagingV2" from="User" to="FHIRValidator">
+      <input name="uri">concat($FHIRValidatorBase, &quot;/api/validator/process&quot;)</input>
+      <input name="method">&quot;POST&quot;</input>
+      <input name="headers">$fhirValidatorHeaders</input>
+      <input name="body">concat('{&quot;operation&quot;:&quot;loadIG&quot;,&quot;inputs&quot;:{&quot;ig&quot;:&quot;', &quot;hl7.fhir.be.vaccination#1.1.2&quot;, '&quot;}}')</input>
+    </send>
+    <process handler="JsonPointerProcessor" operation="process" output="loadIGSeverity">
+      <input name="content">$lastRequest{response}{body}</input>
+      <input name="pointer">&quot;/output/severity&quot;</input>
+    </process>
+    <verify handler="StringValidator" desc="Verify IG loaded successfully">
+      <input name="actualstring">$loadIGSeverity</input>
+      <input name="expectedstring">&quot;information&quot;</input>
+    </verify>
+    <interact id="askUser" desc="Upload a BeVaccination Immunization JSON" inputTitle="Upload a BeVaccination Immunization JSON">
+      <request desc="Upload a BeVaccination Immunization JSON" name="immunizationResource" inputType="UPLOAD" required="true">$immunizationResource</request>
+    </interact>
+    <process handler="JsonPointerProcessor" operation="process" output="assertedResourceType">
+      <input name="content">$immunizationResource</input>
+      <input name="pointer">&quot;/resourceType&quot;</input>
+    </process>
+    <verify handler="StringValidator" desc="Verify resource type">
+      <input name="actualstring">$assertedResourceType</input>
+      <input name="expectedstring">&quot;Immunization&quot;</input>
+    </verify>
+    <assign to="fhirValidatorHeaders{Content-Type}">&quot;application/json&quot;</assign>
+    <assign to="fhirValidatorHeaders{Accept}">&quot;application/json&quot;</assign>
+    <assign to="fhirpathTplParams{resource}">$immunizationResource</assign>
+    <assign to="fhirpathTplParams{expression}">&quot;performer.actor.identifier.exists() implies (performer.actor.identifier.exists(%resource.extension.where(url='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder').valueReference.identifier.where(system = $this.system and value = $this.value).exists() or %resource.extension.where(url='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder').valueReference.resolve().identifier.where(system = $this.system and value = $this.value).exists()) or performer.actor.resolve().identifier.exists(%resource.extension.where(url='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder').valueReference.identifier.where(system = $this.system and value = $this.value).exists() or %resource.extension.where(url='https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-ext-recorder').valueReference.resolve().identifier.where(system = $this.system and value = $this.value).exists()))&quot;</assign>
+    <process handler="TemplateProcessor" operation="process" output="fhirpathBody">
+      <input name="syntax">&quot;freemarker&quot;</input>
+      <input name="template">'{ &quot;operation&quot;: &quot;evaluate&quot;, &quot;inputs&quot;: { &quot;resource&quot;: &quot;${resource?json_string}&quot;, &quot;expression&quot;: &quot;${expression?json_string}&quot; } }'</input>
+      <input name="parameters">$fhirpathTplParams</input>
+    </process>
+    <send id="lastRequest" desc="Evaluate FHIRPath expression" handler="HttpMessagingV2" from="User">
+      <input name="uri">concat($FHIRValidatorBase, &quot;/api/fhirpath/process&quot;)</input>
+      <input name="method">&quot;POST&quot;</input>
+      <input name="headers">$fhirValidatorHeaders</input>
+      <input name="body">$fhirpathBody</input>
+    </send>
+    <process handler="JsonPointerProcessor" operation="process" output="fhirpathResult">
+      <input name="content">$lastRequest{response}{body}</input>
+      <input name="pointer">&quot;/output/result&quot;</input>
+    </process>
+    <verify handler="StringValidator" desc="FHIRPath result matches expected value">
+      <input name="actualstring">$fhirpathResult</input>
+      <input name="expectedstring">&quot;true&quot;</input>
+    </verify>
+    <assign to="fhirValidatorHeaders{Content-Type}">&quot;application/json&quot;</assign>
+    <assign to="fhirValidatorHeaders{Accept}">&quot;application/json&quot;</assign>
+    <assign to="fhirpathTplParams{resource}">$immunizationResource</assign>
+    <assign to="fhirpathTplParams{expression}">&quot;extension.where(url='https://www.ehealth.fgov.be/standards/fhir/vaccination/StructureDefinition/be-ext-administeredProduct').extension.where(url='coded').value.ofType(CodeableConcept).coding.where(system='https://www.ehealth.fgov.be/standards/fhir/medication/NamingSystem/cnk-codes').code&quot;</assign>
+    <process handler="TemplateProcessor" operation="process" output="fhirpathBody">
+      <input name="syntax">&quot;freemarker&quot;</input>
+      <input name="template">'{ &quot;operation&quot;: &quot;evaluate&quot;, &quot;inputs&quot;: { &quot;resource&quot;: &quot;${resource?json_string}&quot;, &quot;expression&quot;: &quot;${expression?json_string}&quot; } }'</input>
+      <input name="parameters">$fhirpathTplParams</input>
+    </process>
+    <send id="lastRequest" desc="Evaluate FHIRPath expression" handler="HttpMessagingV2" from="User">
+      <input name="uri">concat($FHIRValidatorBase, &quot;/api/fhirpath/process&quot;)</input>
+      <input name="method">&quot;POST&quot;</input>
+      <input name="headers">$fhirValidatorHeaders</input>
+      <input name="body">$fhirpathBody</input>
+    </send>
+    <process handler="JsonPointerProcessor" operation="process" output="cnkCode">
+      <input name="content">$lastRequest{response}{body}</input>
+      <input name="pointer">&quot;/output/result&quot;</input>
+    </process>
+    <assign to="expectedSnomed">&quot;871822003&quot;</assign>
+    <assign to="fhirValidatorHeaders{Content-Type}">&quot;application/json&quot;</assign>
+    <assign to="fhirValidatorHeaders{Accept}">&quot;application/json&quot;</assign>
+    <assign to="fhirpathTplParams{resource}">$immunizationResource</assign>
+    <assign to="fhirpathTplParams{expression}">&quot;vaccineCode.coding.where(system='http://snomed.info/sct').code&quot;</assign>
+    <process handler="TemplateProcessor" operation="process" output="fhirpathBody">
+      <input name="syntax">&quot;freemarker&quot;</input>
+      <input name="template">'{ &quot;operation&quot;: &quot;evaluate&quot;, &quot;inputs&quot;: { &quot;resource&quot;: &quot;${resource?json_string}&quot;, &quot;expression&quot;: &quot;${expression?json_string}&quot; } }'</input>
+      <input name="parameters">$fhirpathTplParams</input>
+    </process>
+    <send id="lastRequest" desc="Evaluate FHIRPath expression" handler="HttpMessagingV2" from="User">
+      <input name="uri">concat($FHIRValidatorBase, &quot;/api/fhirpath/process&quot;)</input>
+      <input name="method">&quot;POST&quot;</input>
+      <input name="headers">$fhirValidatorHeaders</input>
+      <input name="body">$fhirpathBody</input>
+    </send>
+    <process handler="JsonPointerProcessor" operation="process" output="fhirpathResult">
+      <input name="content">$lastRequest{response}{body}</input>
+      <input name="pointer">&quot;/output/result&quot;</input>
+    </process>
+    <verify handler="StringValidator" desc="FHIRPath result matches expected value">
+      <input name="actualstring">$fhirpathResult</input>
+      <input name="expectedstring">$expectedSnomed</input>
+    </verify>
+    <call path="scriptlets/instructUser.xml">
+      <input name="step">&quot;informUser&quot;</input>
+      <input name="message">&quot;BeVaccination validated: recorder/performer match and CNK/SNOMED consistency checks passed.&quot;</input>
+    </call>
+  </steps>
+
+  <output>
+    <success>
+      <default>"Test case completed successfully."</default>
+    </success>
+    <failure>
+      <default>"Test case failed. Check step reports and logs."</default>
+    </failure>
+  </output>
+</testcase>

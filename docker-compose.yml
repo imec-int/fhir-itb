@@ -69,8 +69,6 @@ services:
     environment:
       # This is the key to decrypt the initialisation data archive (see below).
       - DATA_ARCHIVE_KEY=fhir
-      # This is the key to decrypt the initialisation data archive (see below).
-      - DATA_ARCHIVE_KEY=fhir
       # Flag to enable the Test Bed's REST API. This can be very useful for efficient test case development.
       - AUTOMATION_API_ENABLED=true
       # Activate the generic vitalink theme.
